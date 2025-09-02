@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "CivilAnki",
-    "slug": "CivilAnki",
+    "slug": "civil-anki",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -33,6 +33,13 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "732eabdc-ccf9-45b8-b477-b1a1f64c0e55"
+      }
+    },
+    "owner": "subzero1337"
   }
 }
