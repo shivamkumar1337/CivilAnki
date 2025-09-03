@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -6,14 +6,15 @@ import {
   SafeAreaView,
   ScrollView,
   TouchableOpacity,
-  FlatList
-} from 'react-native';
-import { Button } from './ui/Button';
-import { Card } from './ui/Card';
-import { Progress } from './ui/Progress';
-import { Badge } from './ui/Badge';
-import { Colors } from '../constants/Colors';
-import { Subject } from '../types';
+  FlatList,
+} from "react-native";
+import { Button } from "./ui/Button";
+import { Card } from "./ui/Card";
+import { Progress } from "./ui/Progress";
+import { Badge } from "./ui/Badge";
+import { Colors } from "../constants/Colors";
+import { Subject } from "../types";
+import { Ionicons } from "@expo/vector-icons";
 
 interface SubjectSelectionProps {
   subjects: Subject[];
@@ -24,9 +25,9 @@ interface SubjectSelectionProps {
 export const SubjectSelection: React.FC<SubjectSelectionProps> = ({
   subjects,
   onSubjectSelect,
-  onBack
+  onBack,
 }) => {
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  const [viewMode, setViewMode] = useState<"list" | "grid">("list");
 
   const renderSubjectListItem = ({ item: subject }: { item: Subject }) => (
     <Card style={styles.listCard} onPress={() => onSubjectSelect(subject)}>
@@ -42,7 +43,7 @@ export const SubjectSelection: React.FC<SubjectSelectionProps> = ({
             </Text>
           </View>
         </View>
-        
+
         <View style={styles.listItemStats}>
           <View style={styles.statsRow}>
             <Text style={styles.progressText}>{subject.progress}%</Text>
@@ -54,16 +55,21 @@ export const SubjectSelection: React.FC<SubjectSelectionProps> = ({
           </View>
         </View>
       </View>
-      
-      <Progress value={subject.progress} height={8} style={styles.progressBar} />
-      
+
+      <Progress
+        value={subject.progress}
+        height={8}
+        style={styles.progressBar}
+      />
+
       <View style={styles.listItemFooter}>
-        <Text style={styles.subtopicsText}>{subject.subtopics.length} subtopics</Text>
+        <Text style={styles.subtopicsText}>
+          {subject.subtopics.length} subtopics
+        </Text>
         <Text style={styles.statusText}>
-          {subject.pendingToday > 0 
-            ? `${subject.pendingToday} due today` 
-            : 'All caught up'
-          }
+          {subject.pendingToday > 0
+            ? `${subject.pendingToday} due today`
+            : "All caught up"}
         </Text>
       </View>
     </Card>
@@ -77,14 +83,14 @@ export const SubjectSelection: React.FC<SubjectSelectionProps> = ({
         <Text style={styles.gridMasteredText}>
           {subject.masteredCount}/{subject.totalQuestions}
         </Text>
-        
+
         <View style={styles.gridProgress}>
           <View style={styles.circularProgress}>
             <Text style={styles.gridProgressText}>{subject.progress}%</Text>
           </View>
         </View>
       </View>
-      
+
       {subject.pendingToday > 0 && (
         <Badge variant="secondary" style={styles.gridPendingBadge}>
           {subject.pendingToday} pending
@@ -95,7 +101,9 @@ export const SubjectSelection: React.FC<SubjectSelectionProps> = ({
 
   const totalPending = subjects.reduce((sum, s) => sum + s.pendingToday, 0);
   const totalMastered = subjects.reduce((sum, s) => sum + s.masteredCount, 0);
-  const overallProgress = Math.round(subjects.reduce((sum, s) => sum + s.progress, 0) / subjects.length);
+  const overallProgress = Math.round(
+    subjects.reduce((sum, s) => sum + s.progress, 0) / subjects.length
+  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -103,30 +111,34 @@ export const SubjectSelection: React.FC<SubjectSelectionProps> = ({
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <TouchableOpacity style={styles.backButton} onPress={onBack}>
-            <Text style={styles.backIcon}>←</Text>
+            <Ionicons
+              name="arrow-back"
+              size={24}
+              color={Colors.light.foreground}
+            />
           </TouchableOpacity>
           <View style={styles.headerTitle}>
             <Text style={styles.title}>Choose Subject</Text>
             <Text style={styles.subtitle}>Select a subject to practice</Text>
           </View>
         </View>
-        
+
         <View style={styles.viewModeToggle}>
           <TouchableOpacity
             style={[
               styles.toggleButton,
-              viewMode === 'list' && styles.activeToggle
+              viewMode === "list" && styles.activeToggle,
             ]}
-            onPress={() => setViewMode('list')}
+            onPress={() => setViewMode("list")}
           >
             <Text style={styles.toggleIcon}>☰</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[
               styles.toggleButton,
-              viewMode === 'grid' && styles.activeToggle
+              viewMode === "grid" && styles.activeToggle,
             ]}
-            onPress={() => setViewMode('grid')}
+            onPress={() => setViewMode("grid")}
           >
             <Text style={styles.toggleIcon}>⊞</Text>
           </TouchableOpacity>
@@ -137,12 +149,16 @@ export const SubjectSelection: React.FC<SubjectSelectionProps> = ({
       <View style={styles.content}>
         <FlatList
           data={subjects}
-          renderItem={viewMode === 'list' ? renderSubjectListItem : renderSubjectGridItem}
+          renderItem={
+            viewMode === "list" ? renderSubjectListItem : renderSubjectGridItem
+          }
           keyExtractor={(item) => item.id}
-          numColumns={viewMode === 'grid' ? 2 : 1}
+          numColumns={viewMode === "grid" ? 2 : 1}
           key={viewMode} // Force re-render when view mode changes
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
+          overScrollMode="never" // Android: disables halo effect
+          bounces={false} // iOS: disables bounce effect
         />
       </View>
 
@@ -171,19 +187,20 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.light.background,
+    paddingTop: 35, // Add gap from top
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 16,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 8, // Reduce since container now has padding
+    paddingBottom: 16,
     borderBottomWidth: 1,
     borderBottomColor: Colors.light.border,
   },
   headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     flex: 1,
   },
   backButton: {
@@ -199,7 +216,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 18,
-    fontWeight: '500',
+    fontWeight: "500",
     color: Colors.light.foreground,
   },
   subtitle: {
@@ -207,7 +224,7 @@ const styles = StyleSheet.create({
     color: Colors.light.mutedForeground,
   },
   viewModeToggle: {
-    flexDirection: 'row',
+    flexDirection: "row",
     backgroundColor: Colors.light.muted,
     borderRadius: 8,
     padding: 4,
@@ -236,14 +253,14 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   listItemHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 16,
   },
   listItemInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     flex: 1,
   },
   iconContainer: {
@@ -251,8 +268,8 @@ const styles = StyleSheet.create({
     height: 48,
     borderRadius: 12,
     backgroundColor: Colors.light.accent,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginRight: 12,
   },
   subjectIcon: {
@@ -263,7 +280,7 @@ const styles = StyleSheet.create({
   },
   subjectName: {
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: "500",
     color: Colors.light.foreground,
     marginBottom: 4,
   },
@@ -272,16 +289,16 @@ const styles = StyleSheet.create({
     color: Colors.light.mutedForeground,
   },
   listItemStats: {
-    alignItems: 'flex-end',
+    alignItems: "flex-end",
   },
   statsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
   progressText: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: "500",
     color: Colors.light.foreground,
   },
   pendingBadge: {
@@ -291,9 +308,9 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   listItemFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   subtopicsText: {
     fontSize: 14,
@@ -311,8 +328,8 @@ const styles = StyleSheet.create({
   },
   gridContent: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   gridIcon: {
     fontSize: 32,
@@ -320,10 +337,10 @@ const styles = StyleSheet.create({
   },
   gridSubjectName: {
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: "500",
     color: Colors.light.foreground,
     marginBottom: 4,
-    textAlign: 'center',
+    textAlign: "center",
   },
   gridMasteredText: {
     fontSize: 12,
@@ -338,16 +355,16 @@ const styles = StyleSheet.create({
     height: 64,
     borderRadius: 32,
     backgroundColor: Colors.light.muted,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   gridProgressText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
     color: Colors.light.foreground,
   },
   gridPendingBadge: {
-    alignSelf: 'center',
+    alignSelf: "center",
     fontSize: 12,
   },
   statsCard: {
@@ -355,15 +372,15 @@ const styles = StyleSheet.create({
     marginTop: 0,
   },
   statsGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
+    flexDirection: "row",
+    justifyContent: "space-around",
   },
   statItem: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   statValue: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
     color: Colors.light.foreground,
     marginBottom: 4,
   },

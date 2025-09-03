@@ -30,7 +30,12 @@ export const Home: React.FC<HomeProps> = ({ user, subjects, onNavigate }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <ScrollView
+    contentContainerStyle={styles.scrollContent}
+    showsVerticalScrollIndicator={false}
+    overScrollMode="never"    // Android: disables halo
+    bounces={false}           // iOS: disables bounce
+  >
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.userInfo}>
@@ -197,10 +202,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.light.background,
+    paddingTop: 18,      // Add gap from top
+    paddingLeft: 16,     // Add gap from left
+    paddingRight: 16,
   },
   scrollContent: {
-    paddingHorizontal: 24,
-    paddingBottom: 32,
+    // paddingHorizontal: 24,
+    paddingBottom: 50,
+    
   },
   header: {
     flexDirection: 'row',

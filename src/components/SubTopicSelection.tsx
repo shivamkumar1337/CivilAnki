@@ -12,6 +12,8 @@ import { Card } from './ui/Card';
 import { Badge } from './ui/Badge';
 import { Colors } from '../constants/Colors';
 import { Subject, SubTopic, YearRange } from '../types';
+import { Ionicons } from '@expo/vector-icons';
+
 
 interface SubTopicSelectionProps {
   subject: Subject;
@@ -71,15 +73,20 @@ export const SubTopicSelection: React.FC<SubTopicSelectionProps> = ({
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          overScrollMode="never"    // Android: disables halo
+          bounces={false}           // iOS: disables bounce
+        >
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity style={styles.backButton} onPress={onBack}>
-            <Text style={styles.backIcon}>←</Text>
+            <Ionicons name="arrow-back" size={24} color={Colors.light.foreground} />
           </TouchableOpacity>
           <View style={styles.headerContent}>
             <View style={styles.subjectIcon}>
-              <Text style={styles.subjectEmoji}>{subject.icon}</Text>
+              <Ionicons name="book" size={20} color={Colors.light.foreground} />
             </View>
             <View style={styles.headerText}>
               <Text style={styles.title}>{subject.name}</Text>
@@ -112,7 +119,7 @@ export const SubTopicSelection: React.FC<SubTopicSelectionProps> = ({
               >
                 <View style={styles.checkbox}>
                   {selectedSubtopics.includes(subtopic.id) && (
-                    <Text style={styles.checkmark}>✓</Text>
+                    <Ionicons name="checkmark" size={16} color={Colors.light.primary} />
                   )}
                 </View>
                 <View style={styles.subtopicInfo}>
@@ -185,7 +192,11 @@ export const SubTopicSelection: React.FC<SubTopicSelectionProps> = ({
               onPress={() => setMode('untimed')}
             >
               <View style={styles.modeIcon}>
-                <Text style={styles.modeEmoji}>⚡</Text>
+                <Ionicons
+                  name={mode === 'untimed' ? 'flash' : 'time'}
+                  size={20}
+                  color={Colors.light.foreground}
+                />
               </View>
               <View style={styles.modeText}>
                 <Text style={styles.modeTitle}>Untimed</Text>
@@ -257,6 +268,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.light.background,
+    paddingTop: 30, // Add gap from top
   },
   scrollContent: {
     paddingBottom: 100,
