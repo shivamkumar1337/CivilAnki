@@ -48,9 +48,13 @@ export const SubjectSelection: React.FC<SubjectSelectionProps> = ({
           <View style={styles.statsRow}>
             <Text style={styles.progressText}>{subject.progress}%</Text>
             {subject.pendingToday > 0 && (
-              <Badge variant="secondary" style={styles.pendingBadge}>
-                {subject.pendingToday} pending
-              </Badge>
+             <Badge
+  variant="secondary"
+  style={styles.pendingBadge}         // For container styles (ViewStyle)
+  textStyle={styles.pendingBadgeText} // For text styles (TextStyle)
+>
+  {subject.pendingToday} pending
+</Badge>
             )}
           </View>
         </View>
@@ -59,7 +63,6 @@ export const SubjectSelection: React.FC<SubjectSelectionProps> = ({
       <Progress
         value={subject.progress}
         height={8}
-        style={styles.progressBar}
       />
 
       <View style={styles.listItemFooter}>
@@ -301,10 +304,19 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     color: Colors.light.foreground,
   },
-  pendingBadge: {
-    fontSize: 12,
-  },
-  progressBar: {
+ pendingBadge: {
+  paddingHorizontal: 8,
+  paddingVertical: 2,
+  borderRadius: 8,
+  backgroundColor: Colors.light.warning,
+  alignSelf: 'flex-start',
+  marginLeft: 8,
+},
+pendingBadgeText: {
+  fontSize: 13,
+  color: '#fff',
+  fontWeight: 'bold'},
+progressBar: {
     marginBottom: 12,
   },
   listItemFooter: {

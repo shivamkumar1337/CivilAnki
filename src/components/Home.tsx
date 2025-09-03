@@ -400,9 +400,19 @@ const styles = StyleSheet.create({
     color: Colors.light.foreground,
     marginBottom: 4,
   },
-  pendingBadge: {
-    fontSize: 12,
-  },
+pendingBadge: {
+  paddingHorizontal: 8,
+  paddingVertical: 2,
+  borderRadius: 8,
+  backgroundColor: Colors.light.warning,
+  alignSelf: 'flex-start',
+  marginLeft: 8,
+},
+pendingBadgeText: {
+  fontSize: 13,
+  color: '#fff',
+  fontWeight: 'bold',
+},
   lastPracticedCard: {
     marginBottom: 24,
   },
