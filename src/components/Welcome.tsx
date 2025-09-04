@@ -24,7 +24,7 @@ export function Welcome({ onContinue }: WelcomeProps) {
     // Auto-advance after 2.5 seconds
     const timer = setTimeout(() => {
       onContinue();
-    }, 2500);
+    }, 20000);
 
     return () => clearTimeout(timer);
   }, [onContinue, opacity]);
