@@ -114,7 +114,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
             </Card>
           )}
 
-          {currentStep === 2 && (
+          {/* {currentStep === 2 && (
             <Card style={styles.reviewCard}>
               <View style={styles.reviewRow}>
                 <Text style={styles.reviewLabel}>✅ Easy questions</Text>
@@ -129,7 +129,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
                 <Text style={styles.reviewDescription}>Review in 21 days</Text>
               </View>
             </Card>
-          )}
+          )} */}
         </View>
 
         {/* Bottom section */}
