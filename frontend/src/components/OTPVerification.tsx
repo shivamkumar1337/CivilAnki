@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import { Colors } from '../constants/Colors';
 import { authService } from '../services/AuthService';
@@ -14,83 +14,102 @@ interface OTPVerificationProps {
 }
 
 export function OTPVerification({
-  mobile,
+  mobile: mobileProp,
   isLogin,
   onVerify,
   onBack,
   onResendOTP,
   userName,
 }: OTPVerificationProps) {
+  const [mobile, setMobile] = useState(mobileProp || '');
   const [otp, setOtp] = useState('');
+  const [step, setStep] = useState<'enterMobile' | 'enterOtp'>('enterMobile');
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [resendTimer, setResendTimer] = useState(30);
-  const [canResend, setCanResend] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  useEffect(() => {
-    if (resendTimer > 0) {
-      const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
-      return () => clearTimeout(timer);
-    } else {
-      setCanResend(true);
-    }
-  }, [resendTimer]);
+  const [canResend, setCanResend] = useState(false);
+  const [resendTimer, setResendTimer] = useState(30);
+  const timerRef = useRef<number | null>(null);
 
-  const handleOTPChange = (value: string) => {
-    const digits = value.replace(/\D/g, '').slice(0, 6);
-    setOtp(digits);
+  const handleSendOtp = async () => {
+    setLoading(true);
     setError('');
+    try {
+      const { success, error } = await authService.sendOTP(mobile);
+      if (!success) throw new Error(error);
+      setStep('enterOtp');
+      setCanResend(false);
+      setResendTimer(30);
+    } catch (err) {
+      setError('Failed to send OTP');
+    }
+    setLoading(false);
   };
 
   const handleVerify = async () => {
-    if (otp.length !== 6) {
-      setError('Please enter the complete 6-digit OTP');
-      return;
-    }
-    setIsLoading(true);
+    setLoading(true);
     setError('');
     try {
-      const result = await authService.verifySMSOTP(mobile, otp);
-      if (result.success && result.user) {
-        setIsSuccess(true);
-        setTimeout(() => {
-          onVerify(result.user);
-        }, 1000);
-      } else {
-        setError(result.error || 'Invalid OTP. Please check and try again.');
-        setOtp('');
-      }
-    } catch (error) {
-      setError('Verification service unavailable. Please try again.');
-      setOtp('');
-    } finally {
-      setIsLoading(false);
+      const { success, data, error } = await authService.verifyOTP(mobile, otp);
+      if (!success) throw new Error(error);
+      onVerify(data);
+      setIsSuccess(true);
+    } catch (err) {
+      setError('Invalid OTP');
     }
+    setLoading(false);
   };
 
   const handleResend = async () => {
-    if (!canResend) return;
+    setError('');
+    setCanResend(false);
+    setResendTimer(30);
     try {
-      setError('');
-      const result = await authService.sendSMSOTP(mobile);
-      if (result.success) {
+      await sendOTP(mobile);
+      if (onResendOTP) {
         onResendOTP();
-        setResendTimer(30);
-        setCanResend(false);
-        setOtp('');
-        const demoOTP = authService.getStoredOTP(mobile);
-        if (demoOTP) {
-          setError(`Demo mode: New OTP sent! Use: ${demoOTP}`);
-          setTimeout(() => setError(''), 5000);
-        }
-      } else {
-        setError(result.error || 'Failed to resend OTP. Please try again.');
       }
-    } catch (error) {
-      setError('SMS service unavailable. Please try again later.');
+    } catch (err) {
+      setError('Failed to resend OTP');
+      setCanResend(true);
     }
   };
+
+  const handleOTPChange = (text: string) => {
+    const digits = text.replace(/[^0-9]/g, '');
+    setOtp(digits);
+  };
+
+  useEffect(() => {
+    // manage resend timer when entering OTP step
+    if (step === 'enterOtp') {
+      setCanResend(false);
+      setResendTimer(30);
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+      timerRef.current = setInterval(() => {
+        setResendTimer(prev => {
+          if (prev <= 1) {
+            if (timerRef.current) {
+              clearInterval(timerRef.current);
+              timerRef.current = null;
+            }
+            setCanResend(true);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000) as unknown as number;
+    }
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [step]);
 
   const formatMobile = (mobile: string) => {
     const parts = mobile.split(' ');
@@ -158,7 +177,7 @@ export function OTPVerification({
               maxLength={6}
               value={otp}
               onChangeText={handleOTPChange}
-              editable={!isLoading}
+              editable={!loading}
               placeholder="______"
               textAlign="center"
               autoFocus
@@ -167,13 +186,13 @@ export function OTPVerification({
           <TouchableOpacity
             style={[
               styles.verifyButton,
-              (otp.length !== 6 || isLoading) && { opacity: 0.5 }
+              (otp.length !== 6 || loading) && { opacity: 0.5 }
             ]}
-            disabled={otp.length !== 6 || isLoading}
+            disabled={otp.length !== 6 || loading}
             onPress={handleVerify}
             activeOpacity={0.8}
           >
-            {isLoading ? (
+            {loading ? (
               <ActivityIndicator size="small" color="#fff" />
             ) : (
               <Text style={styles.verifyButtonText}>Verify OTP</Text>
@@ -475,3 +494,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
 });
+
+function sendOTP(mobile: string) {
+  throw new Error('Function not implemented.');
+}

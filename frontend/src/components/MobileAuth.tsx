@@ -30,26 +30,21 @@ export function MobileAuth({ onSubmit, onBack }:MobileAuthProps) {
       setError('');
       
       // Send OTP using the auth service
-      const result = await authService.sendSMSOTP(`+91${mobile}`);
+      const result = await authService.sendOTP(`+91${mobile}`);
       
       if (result.success) {
-        // Get the demo OTP for display (remove this in production)
-        const demoOTP = authService.getStoredOTP(`+91${mobile}`);
-        
-        if (demoOTP) {
-          // Show demo OTP temporarily (remove this in production)
-          setError(`Demo mode: OTP sent! Use: ${demoOTP}`);
-          setTimeout(() => setError(''), 5000);
-        }
-        
+        console.log(result)
         // Call onSubmit with the mobile number and success status
         onSubmit(`+91${mobile}`, true);
       } else {
+        console.log(result)
         setError(result.error || 'Failed to send OTP. Please try again.');
       }
     } catch (error) {
+      console.log(error)
       setError('SMS service unavailable. Please try again later.');
     } finally {
+      console.log("finally")
       setIsLoading(false);
     }
   };

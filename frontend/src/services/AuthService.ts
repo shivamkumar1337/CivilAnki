@@ -1,6 +1,10 @@
 import * as Google from 'expo-auth-session/providers/google';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { Platform } from 'react-native';
+import axios from 'axios';
+import { createClient } from '@supabase/supabase-js';
+
+const API_BASE = 'http://localhost:8000'; // Change to your backend URL
 
 export interface SocialLoginResult {
   success: boolean;
@@ -21,6 +25,7 @@ export interface SMSResponse {
 }
 
 export interface OTPVerificationResult {
+  token?: string;
   success: boolean;
   user?: {
     id: string;
@@ -35,16 +40,21 @@ export interface OTPVerificationResult {
 // In-memory OTP storage (for demo)
 const otpStorage = new Map<string, { otp: string; expires: number; attempts: number }>();
 
+const supabase = createClient(
+  process.env.EXPO_PUBLIC_SUPABASE_URL!,
+  process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!
+);
+
 class AuthService {
   
   // Move this method inside the class properly
-  getStoredOTP(mobile: string): string | null {
-    const stored = otpStorage.get(mobile);
-    if (!stored || Date.now() > stored.expires) {
-      return null;
-    }
-    return stored.otp;
-  }
+  // getStoredOTP(mobile: string): string | null {
+  //   const stored = otpStorage.get(mobile);
+  //   if (!stored || Date.now() > stored.expires) {
+  //     return null;
+  //   }
+  //   return stored.otp;
+  // }
 
   // Google Sign-In - Remove hook usage, make it configurable
   async signInWithGoogle(config: {
@@ -119,10 +129,9 @@ class AuthService {
       
       console.log(`Demo OTP for ${phoneNumber}: ${otp}`); // For testing
       
-      return {
-        success: true,
-        message: `OTP sent to ${phoneNumber}`,
-      };
+      // Implement this endpoint in your backend if not present
+      const res = await axios.post(`${API_BASE}/auth/send-otp`, { mobile: phoneNumber });
+      return res.data;
     } catch (error) {
       return { success: false, error: 'Failed to send OTP' };
     }
@@ -158,16 +167,9 @@ class AuthService {
       // Success - clean up
       otpStorage.delete(phoneNumber);
       
-      return {
-        success: true,
-        user: {
-          id: `user_${Date.now()}`,
-          name: 'KartikM',
-          mobile: phoneNumber,
-          isAuthenticated: true,
-          avatar: '👤',
-        },
-      };
+      // Implement this endpoint in your backend if not present
+      const res = await axios.post(`${API_BASE}/auth/verify-otp`, { mobile: phoneNumber, otp });
+      return res.data;
     } catch (error) {
       return { success: false, error: 'OTP verification failed' };
     }
@@ -190,9 +192,34 @@ class AuthService {
     }
   }
 
-  // Method to clear all OTPs (useful for testing)
-  clearAllOTPs(): void {
-    otpStorage.clear();
+  // // Method to clear all OTPs (useful for testing)
+  // clearAllOTPs(): void {
+  //   otpStorage.clear();
+  // }
+
+  async sendOTP(phone: string) {
+    try {
+      console.log("sendOTP called with phone:", phone);
+      const { data, error } = await supabase.auth.signInWithOtp({ phone });
+      if (error) throw error;
+      return { success: true, data };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  }
+
+  async verifyOTP(phone: string, token: string) {
+    try {
+      const { data, error } = await supabase.auth.verifyOtp({
+        phone,
+        token,
+        type: 'sms'
+      });
+      if (error) throw error;
+      return { success: true, data };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
   }
 }
 
