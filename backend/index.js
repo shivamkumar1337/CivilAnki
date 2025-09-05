@@ -4,14 +4,14 @@ const dotenv = require("dotenv");
 
 dotenv.config();
 
-const profilesRouter = require("./routes/profiles");
-const subjectsRouter = require("./routes/subjects");
-const topicsRouter = require("./routes/topics");
-const questionsRouter = require("./routes/questions");
-const progressRouter = require("./routes/progress");
-const authRoutes = require('./routes/auth');
+const profilesRouter = require("./src/routes/profiles");
+const subjectsRouter = require("./src/routes/subjects");
+const topicsRouter = require("./src/routes/topics");
+const questionsRouter = require("./src/routes/questions");
+const progressRouter = require("./src/routes/progress");
+const authRoutes = require('./src/routes/auth');
 
-const { errorHandler } = require("./middlewares/errorHandler");
+const { errorHandler } = require("./src/middlewares/errorHandler");
 
 const app = express();
 const PORT = process.env.PORT || 4000;
