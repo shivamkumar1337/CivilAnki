@@ -14,27 +14,26 @@ export function AuthOptions({ onMobileAuth, onSocialLogin }: AuthOptionsProps) {
   const [error, setError] = useState<string>('');
 
   // Handle social login
-  const handleSocialLogin = async (provider: 'google' | 'apple') => {
-    setSocialLoading(provider);
-    setError('');
-    try {
-      let result: SocialLoginResult;
-      if (provider === 'google') {
-        result = await authService.signInWithGoogle();
-      } else {
-        result = await authService.signInWithApple();
-      }
-      if (result.success && result.user) {
-        onSocialLogin(provider, result.user);
-      } else {
-        setError(result.error || `${provider} sign-in failed`);
-      }
-    } catch (error) {
-      setError(`${provider} sign-in is temporarily unavailable`);
-    } finally {
-      setSocialLoading(null);
-    }
-  };
+  // const handleSocialLogin = async (provider: 'google' | 'apple') => {
+  //   setSocialLoading(provider);
+  //   setError('');
+  //   try {
+  //     let result: SocialLoginResult;
+  //     if (provider === 'google') {
+  //       result = await authService.signInWithGoogle();
+      
+  //     if (result.success && result.user) {
+  //       onSocialLogin(provider, result.user);
+  //     } else {
+  //       setError(result.error || `${provider} sign-in failed`);
+  //     }
+  //   }
+  //   } catch (error) {
+  //     setError(`${provider} sign-in is temporarily unavailable`);
+  //   } finally {
+  //     setSocialLoading(null);
+  //   }
+  // };
 
   return (
     <View style={styles.container}>
@@ -107,7 +106,7 @@ export function AuthOptions({ onMobileAuth, onSocialLogin }: AuthOptionsProps) {
         </View>
 
         {/* Continue with Google */}
-        <TouchableOpacity
+        {/* <TouchableOpacity
           style={styles.socialButton}
           onPress={() => handleSocialLogin('google')}
           activeOpacity={0.8}
@@ -126,10 +125,9 @@ export function AuthOptions({ onMobileAuth, onSocialLogin }: AuthOptionsProps) {
               <Text style={styles.socialButtonText}>Continue with Google</Text>
             </>
           )}
-        </TouchableOpacity>
-
+        </TouchableOpacity> */}
         {/* Continue with Apple */}
-        <TouchableOpacity
+        {/* <TouchableOpacityr
           style={styles.socialButton}
           onPress={() => handleSocialLogin('apple')}
           activeOpacity={0.8}
@@ -148,7 +146,7 @@ export function AuthOptions({ onMobileAuth, onSocialLogin }: AuthOptionsProps) {
               <Text style={styles.socialButtonText}>Continue with Apple</Text>
             </>
           )}
-        </TouchableOpacity>
+        </TouchableOpacity> */}
 
         {/* Terms */}
         <View style={styles.termsSection}>

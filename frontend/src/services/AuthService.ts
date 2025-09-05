@@ -1,9 +1,8 @@
-import * as Google from 'expo-auth-session/providers/google';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { Platform } from 'react-native';
 import axios from 'axios';
 import { createClient } from '@supabase/supabase-js';
-
+// import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 const API_BASE = 'http://localhost:8000'; // Change to your backend URL
 
 export interface SocialLoginResult {
@@ -56,21 +55,25 @@ class AuthService {
   //   return stored.otp;
   // }
 
-  // Google Sign-In - Remove hook usage, make it configurable
-  async signInWithGoogle(config: {
-    clientId: string;
-    iosClientId?: string;
-    androidClientId?: string;
-    webClientId?: string;
-  }): Promise<SocialLoginResult> {
-    try {
-      // This should be handled in the component that calls this service
-      // You'll need to pass the authentication result to this method
-      throw new Error('Google Sign-In should be handled in React component with hooks');
-    } catch (error) {
-      return { success: false, error: 'Google Sign-In configuration error' };
-    }
-  }
+  // Google Sign-In 
+
+  // async signInWithGoogle(): Promise<SocialLoginResult> {
+  //   try {
+  //     await GoogleSignin.hasPlayServices();
+  //     // Use getTokens() to reliably obtain the idToken (matches typings)
+  //     const tokens = await GoogleSignin.getTokens();
+  //     const idToken = tokens.idToken;
+  //     if (!idToken) throw new Error('No ID token present!');
+  //     const { data, error } = await supabase.auth.signInWithIdToken({
+  //       provider: 'google',
+  //       token: idToken,
+  //     });
+  //     if (error) throw error;
+  //     return { success: true, user: data.user as any };
+  //   } catch (error: any) {
+  //     return { success: false, error: error.message || 'Google sign-in failed' };
+  //   }
+  // }
 
   // Apple Sign-In
   async signInWithApple(): Promise<SocialLoginResult> {
