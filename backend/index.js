@@ -9,7 +9,7 @@ const subjectsRouter = require("./src/routes/subjects");
 const topicsRouter = require("./src/routes/topics");
 const questionsRouter = require("./src/routes/questions");
 const progressRouter = require("./src/routes/progress");
-const authRoutes = require('./src/routes/auth');
+// const authRoutes = require('./src/routes/auth');
 
 const { errorHandler } = require("./src/middlewares/errorHandler");
 
@@ -25,7 +25,7 @@ app.use("/progress", progressRouter);
 app.use("/questions", questionsRouter);
 app.use("/subjects", subjectsRouter);
 app.use("/topics", topicsRouter);
-app.use('/auth', authRoutes);
+// app.use('/auth', authRoutes);
 app.use(errorHandler);
 
 /* simple health check */
