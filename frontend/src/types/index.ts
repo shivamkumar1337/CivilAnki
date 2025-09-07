@@ -1,4 +1,8 @@
 export type Screen = 
+ | "welcome"
+  | "auth-options"
+  | "mobile-auth"
+  | "otp-verification"
   | 'onboarding'
   | 'home' 
   | 'subjects' 
@@ -9,9 +13,13 @@ export type Screen =
   | 'history';
 
 export interface User {
+  id: string;
   name: string;
+  mobile: string;
+  email?: string;
   streak: number;
   avatar: string;
+  isAuthenticated: boolean;
 }
 
 export interface Subject {
@@ -63,6 +71,11 @@ export interface SessionData {
     isCorrect: boolean; 
     reviewInterval?: string 
   }[];
+}
+export interface AuthState {
+  mobile: string;
+  isLogin: boolean;
+  name?: string;
 }
 
 export type ReviewInterval = '7min' | '21min' | '21days' | 'too-easy';

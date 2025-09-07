@@ -1,9 +1,13 @@
 import { User, Subject, YearRange, Question } from '../types';
 
 export const mockUser: User = {
-  name: 'Priya Sharma',
+  id: "1",
+  name: "Priya Sharma",
+  mobile: "+91 98765 43210",
+  email: "priya.sharma@example.com",
   streak: 12,
-  avatar: '👩‍🎓'
+  avatar: "👩‍🎓",
+  isAuthenticated: false,
 };
 
 export const mockSubjects: Subject[] = [

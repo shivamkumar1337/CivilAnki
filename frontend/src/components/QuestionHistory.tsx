@@ -151,7 +151,7 @@ export const QuestionHistory: React.FC<QuestionHistoryProps> = ({ onBack }) => {
           </Text>
           <Badge 
             variant="secondary" 
-            style={[styles.difficultyBadge, { backgroundColor: getDifficultyColor(item.difficulty) + '20' }]}
+            style={{ ...styles.difficultyBadge, backgroundColor: getDifficultyColor(item.difficulty) + '20' }}
           >
             <Text style={[styles.difficultyText, { color: getDifficultyColor(item.difficulty) }]}>
               {item.difficulty}
