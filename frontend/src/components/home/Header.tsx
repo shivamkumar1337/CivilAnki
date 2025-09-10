@@ -54,7 +54,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 16,
-    backgroundColor: Colors.light.background,
+    // backgroundColor: Colors.light.background,
   },
   userSection: {
     flex: 1,
