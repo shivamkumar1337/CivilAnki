@@ -103,6 +103,23 @@ class AuthService {
       return { success: false, error: error.message };
     }
   }
+  async signupProfile(userId: string, name: string) {
+    console.log("signupProfile called with userId:", userId, "name:", name);
+const { data, error } = await supabase
+  .from('profiles')
+  .insert({ name, auth_user_id: userId })
+  .select();  // ← Add this to return the inserted data
+
+console.log("Profile insert response:", data);
+console.log("Any error:", error);
+
+    return { data };
+  }
+
+
 }
+
+
+
 
 export const authService = new AuthService();

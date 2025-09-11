@@ -20,7 +20,7 @@ export function OTPVerification() {
   const dispatch = useDispatch();
   
   const { mobile: routeMobile, isLogin, name } = route.params;
-  
+
   const [mobile, setMobile] = useState(routeMobile || '');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
@@ -51,43 +51,45 @@ export function OTPVerification() {
   const handleVerify = async () => {
     const otpString = otp.join('');
     if (otpString.length !== 6) return;
-    
-    // Dismiss keyboard before verification
+
     Keyboard.dismiss();
-    
     setLoading(true);
     setError('');
-    
+
     try {
       const { success, data, error } = await authService.verifyOTP(mobile, otpString);
       if (!success) throw new Error(error);
-      
-      // Update user data in Redux
-      const userData = data?.user;
+      console
 
-      const userDataStore  = {
-        id: userData?.id ,
+      const userData = data?.user;
+      const userDataStore = {
+        id: userData?.id,
         mobile: mobile,
         email: userData?.email || '',
         isAuthenticated: true,
-        // ensure session is undefined instead of null so it matches Partial<User> type
         session: data?.session ?? undefined,
       };
-      
-      // Set user data first
+
+      // If this is a signup, update the user's name in the profiles table
+           if (!isLogin && name && userData?.id) {
+        const profileResp = await authService.signupProfile(userData.id, name);
+        // signupProfile may return different shapes; check for an error safely
+        const profileError = (profileResp as any).error ?? null;
+        if (profileError) {
+          setError('Failed to save profile name.');
+          setLoading(false);
+          return;
+        }
+      }
+
       dispatch(setUser(userDataStore));
-      // Then set authenticated status
       dispatch(setAuthenticated(true));
-      
       setIsSuccess(true);
-      
-      // After showing success screen, the AppNavigator will automatically 
-      // switch to MainNavigator due to Redux state change
+
       setTimeout(() => {
-        // The navigation will happen automatically due to Redux state change
-        // No manual navigation needed here
+        // Navigation handled by Redux state change
       }, 1500);
-      
+
     } catch (err) {
       setError('Invalid OTP. Please try again.');
     }
