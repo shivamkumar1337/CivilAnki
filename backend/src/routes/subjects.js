@@ -7,6 +7,7 @@ const router = Router();
 // Get all subjects
 router.get("/", async (_req, res, next) => {
   try {
+    // console.log("Fetching subjects...");
     const { data, error } = await supabaseAnon.from("subjects").select("*");
     if (error) throw error;
     res.json(data);

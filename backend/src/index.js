@@ -9,12 +9,12 @@ const subjectsRouter = require("./routes/subjects");
 const topicsRouter = require("./routes/topics");
 const questionsRouter = require("./routes/questions");
 const progressRouter = require("./routes/progress");
-const authRoutes = require('./routes/auth');
+// const authRoutes = require('./routes/auth');
 
 const { errorHandler } = require("./middlewares/errorHandler");
 
 const app = express();
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 8000;
 console.log("PORT:", PORT);
 
 app.use(cors());
@@ -25,7 +25,7 @@ app.use("/progress", progressRouter);
 app.use("/questions", questionsRouter);
 app.use("/subjects", subjectsRouter);
 app.use("/topics", topicsRouter);
-app.use('/auth', authRoutes);
+// app.use('/auth', authRoutes);
 app.use(errorHandler);
 
 /* simple health check */

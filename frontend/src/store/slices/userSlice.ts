@@ -9,6 +9,7 @@ const initialState: User = {
   streak: 0,
   avatar: '👤',
   isAuthenticated: false,
+  session: undefined,
 };
 
 const userSlice = createSlice({

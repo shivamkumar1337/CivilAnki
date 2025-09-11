@@ -18,28 +18,6 @@ export interface SocialLoginResult {
   error?: string;
 }
 
-export interface SMSResponse {
-  success: boolean;
-  message?: string;
-  error?: string;
-}
-
-export interface OTPVerificationResult {
-  token?: string;
-  success: boolean;
-  user?: {
-    id: string;
-    name: string;
-    mobile: string;
-    isAuthenticated: boolean;
-    avatar?: string;
-  };
-  error?: string;
-}
-
-// In-memory OTP storage (for demo)
-const otpStorage = new Map<string, { otp: string; expires: number; attempts: number }>();
-
 const supabase = createClient(
   process.env.EXPO_PUBLIC_SUPABASE_URL!,
   process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!
@@ -47,15 +25,6 @@ const supabase = createClient(
 
 class AuthService {
   
-  // Move this method inside the class properly
-  // getStoredOTP(mobile: string): string | null {
-  //   const stored = otpStorage.get(mobile);
-  //   if (!stored || Date.now() > stored.expires) {
-  //     return null;
-  //   }
-  //   return stored.otp;
-  // }
-
   // Google Sign-In - Remove hook usage, make it configurable
   async signInWithGoogle(config: {
     clientId: string;
@@ -110,93 +79,6 @@ class AuthService {
     }
   }
 
-  // SMS OTP logic - Fixed
-  async sendSMSOTP(phoneNumber: string): Promise<SMSResponse> {
-    try {
-      // Validate phone number format
-      if (!phoneNumber || phoneNumber.length < 10) {
-        return { success: false, error: 'Invalid phone number' };
-      }
-
-      // Clean up expired OTPs first
-      this.cleanupExpiredOTPs();
-
-      // Generate and store OTP
-      const otp = this.generateOTP();
-      const expires = Date.now() + 5 * 60 * 1000; // 5 minutes
-      
-      otpStorage.set(phoneNumber, { otp, expires, attempts: 0 });
-      
-      console.log(`Demo OTP for ${phoneNumber}: ${otp}`); // For testing
-      
-      // Implement this endpoint in your backend if not present
-      const res = await axios.post(`${API_BASE}/auth/send-otp`, { mobile: phoneNumber });
-      return res.data;
-    } catch (error) {
-      return { success: false, error: 'Failed to send OTP' };
-    }
-  }
-
-  async verifySMSOTP(phoneNumber: string, otp: string): Promise<OTPVerificationResult> {
-    try {
-      const stored = otpStorage.get(phoneNumber);
-      
-      if (!stored) {
-        return { success: false, error: 'OTP not found. Please request a new one.' };
-      }
-
-      if (Date.now() > stored.expires) {
-        otpStorage.delete(phoneNumber);
-        return { success: false, error: 'OTP expired. Please request a new one.' };
-      }
-
-      if (stored.attempts >= 3) {
-        otpStorage.delete(phoneNumber);
-        return { success: false, error: 'Too many failed attempts. Please request a new OTP.' };
-      }
-
-      if (stored.otp !== otp.trim()) {
-        stored.attempts++;
-        otpStorage.set(phoneNumber, stored); // Update attempts
-        return { 
-          success: false, 
-          error: `Invalid OTP. ${3 - stored.attempts} attempts remaining.` 
-        };
-      }
-
-      // Success - clean up
-      otpStorage.delete(phoneNumber);
-      
-      // Implement this endpoint in your backend if not present
-      const res = await axios.post(`${API_BASE}/auth/verify-otp`, { mobile: phoneNumber, otp });
-      return res.data;
-    } catch (error) {
-      return { success: false, error: 'OTP verification failed' };
-    }
-  }
-
-  // Helper method to generate OTP
-  private generateOTP(): string {
-    // Generate random 6-digit OTP for production
-    // return Math.floor(100000 + Math.random() * 900000).toString();
-    return "123456"
-  }
-
-  // Helper method to clean expired OTPs
-  private cleanupExpiredOTPs(): void {
-    const now = Date.now();
-    for (const [phone, data] of otpStorage.entries()) {
-      if (now > data.expires) {
-        otpStorage.delete(phone);
-      }
-    }
-  }
-
-  // // Method to clear all OTPs (useful for testing)
-  // clearAllOTPs(): void {
-  //   otpStorage.clear();
-  // }
-
   async sendOTP(phone: string) {
     try {
       console.log("sendOTP called with phone:", phone);
@@ -208,11 +90,11 @@ class AuthService {
     }
   }
 
-  async verifyOTP(phone: string, token: string) {
+  async verifyOTP(phone: string, otp: string) {
     try {
       const { data, error } = await supabase.auth.verifyOtp({
         phone,
-        token,
+        token:otp,
         type: 'sms'
       });
       if (error) throw error;

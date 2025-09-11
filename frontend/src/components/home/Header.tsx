@@ -1,22 +1,41 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/Colors';
 import { User } from '../../types';
+import { useDispatch, useSelector } from 'react-redux';
+import { HomeService } from '../../services/HomeService';
+import { setUser } from '../../store/slices/userSlice';
 
 interface HeaderProps {
-  user: User;
   onNotificationPress: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ user, onNotificationPress }) => {
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning';
-    if (hour < 17) return 'Good afternoon';
-    return 'Good evening';
-  };
+export const Header: React.FC<HeaderProps> = ({ onNotificationPress }) => {
+  const dispatch = useDispatch();
+  const user = useSelector((state: any) => state.user);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (user.session?.access_token) {
+        try {
+          const profile = await HomeService.getProfile(user.session.access_token);
+          dispatch(setUser({
+            name: profile.name,
+            email: profile.email,
+            mobile: profile.mobile,
+            streak: profile.streak,
+            avatar: profile.avatar,
+            id: profile.id,
+          }));
+        } catch (e) {
+          // Optionally handle error
+        }
+      }
+    };
+    fetchProfile();
+  }, [user.session, dispatch]);
 
   return (
     <View style={styles.container}>
@@ -29,12 +48,13 @@ export const Header: React.FC<HeaderProps> = ({ user, onNotificationPress }) => 
         </LinearGradient>
         <View style={styles.greetingSection}>
           <Text style={styles.greeting}>
-            {getGreeting()}, {user.name.split(' ')[0]}
+            {user.name ? `Hi, ${user.name}` : 'Welcome!'}
           </Text>
-          <Text style={styles.subtitle}>Ready for today's practice?</Text>
+          <Text style={styles.subtitle}>
+            {user.email || user.mobile}
+          </Text>
         </View>
       </View>
-      
       <View style={styles.actions}>
         <View style={styles.streakBadge}>
           <Ionicons name="flame" size={14} color="#FF6B35" />

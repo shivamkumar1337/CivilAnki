@@ -20,6 +20,7 @@ export interface User {
   streak: number;
   avatar: string;
   isAuthenticated: boolean;
+  session?: object;
 }
 
 export interface Subject {
@@ -31,6 +32,7 @@ export interface Subject {
   masteredCount: number;
   pendingToday: number;
   subtopics: SubTopic[];
+  imageUrl?: string;
 }
 
 export interface SubTopic {

@@ -13,6 +13,7 @@ import { ProgressOverview } from './ProgressOverview';
 import { Colors } from '@/src/constants/Colors';
 import { getImageSource } from '@/assets/images';
 import { mockSubjects,mockcurrentSubjects } from '@/src/constants/mockData';
+import { SubjectCards } from './SubjectCards';
 // import { MainStackParamList } from '../navigation/types';
 // import { RootState } from '../store';
 // import { Colors } from '../constants/Colors';
@@ -50,50 +51,50 @@ export const Home: React.FC = () => {
   };
 
   // Helper SubjectCard component styled as per your design
-  const SubjectCard = ({ subject, onPress }: { subject: any; onPress: () => void }) => (
-    <TouchableOpacity
-      onPress={onPress}
-      style={{
-        marginRight: 16,
-        alignItems: 'center',
-        width: 128,
-      }}
-      activeOpacity={0.8}
-    >
-      <View
-        style={{
-          aspectRatio: 9 / 15,
-          width: 128,
-          marginBottom: 12,
-          borderRadius: 12,
-          borderWidth: 1,
-          borderColor: '#e5e7eb',
-          overflow: 'hidden',
-          backgroundColor: '#fff',
-        }}
-      >
-        <Image
-          // source={subject.imageUrl}
-          source={getImageSource(subject.name)}
-          style={{ width: '100%', height: '100%', resizeMode: 'cover' }}
-        />
-      </View>
-      <Text
-        style={{
-          fontSize: 14,
-          color: '#111827',
-          textAlign: 'left',
-          width: 128,
-          lineHeight: 18,
-          fontWeight: '500',
-          marginLeft: 20,
-        }}
-        numberOfLines={2}
-      >
-        {subject.name}
-      </Text>
-    </TouchableOpacity>
-  );
+  // const SubjectCard = ({ subject, onPress }: { subject: any; onPress: () => void }) => (
+  //   <TouchableOpacity
+  //     onPress={onPress}
+  //     style={{
+  //       marginRight: 16,
+  //       alignItems: 'center',
+  //       width: 128,
+  //     }}
+  //     activeOpacity={0.8}
+  //   >
+  //     <View
+  //       style={{
+  //         aspectRatio: 9 / 15,
+  //         width: 128,
+  //         marginBottom: 12,
+  //         borderRadius: 12,
+  //         borderWidth: 1,
+  //         borderColor: '#e5e7eb',
+  //         overflow: 'hidden',
+  //         backgroundColor: '#fff',
+  //       }}
+  //     >
+  //       <Image
+  //         // source={subject.imageUrl}
+  //         source={getImageSource(subject.name)}
+  //         style={{ width: '100%', height: '100%', resizeMode: 'cover' }}
+  //       />
+  //     </View>
+  //     <Text
+  //       style={{
+  //         fontSize: 14,
+  //         color: '#111827',
+  //         textAlign: 'left',
+  //         width: 128,
+  //         lineHeight: 18,
+  //         fontWeight: '500',
+  //         marginLeft: 20,
+  //       }}
+  //       numberOfLines={2}
+  //     >
+  //       {subject.name}
+  //     </Text>
+  //   </TouchableOpacity>
+  // );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -130,21 +131,7 @@ export const Home: React.FC = () => {
           <View style={{ paddingHorizontal: 16, marginBottom: 12 }}>
             <Text style={{ fontSize: 18, color: '#111827', fontWeight: '600' }}>Static</Text>
           </View>
-          <View style={{ borderBottomColor: '#e5e7eb', paddingBottom: 16 }}>
-            <FlatList
-              data={subjects}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              keyExtractor={(item) => item.id}
-              contentContainerStyle={{ paddingHorizontal: 16 }}
-              renderItem={({ item }) => (
-                <SubjectCard
-                  subject={item}
-                  onPress={() => handleSubjectPress(item)}
-                />
-              )}
-            />
-          </View>
+          <SubjectCards/>
           {/* <TouchableOpacity onPress={handleViewAllSubjects} style={{ alignSelf: 'flex-end', margin: 16 }}>
             <Text style={{ color: '#2563eb', fontWeight: '500' }}>View All</Text>
           </TouchableOpacity> */}
@@ -156,21 +143,7 @@ export const Home: React.FC = () => {
           <View style={{ paddingHorizontal: 16, marginBottom: 12 }}>
             <Text style={{ fontSize: 18, color: '#111827', fontWeight: '600' }}>Current</Text>
           </View>
-          <View style={{ borderBottomWidth: 1, borderBottomColor: '#e5e7eb', paddingBottom: 16 }}>
-            <FlatList
-              data={currentSubjects}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              keyExtractor={(item) => item.id}
-              contentContainerStyle={{ paddingHorizontal: 16 }}
-              renderItem={({ item }) => (
-                <SubjectCard
-                  subject={item}
-                  onPress={() => handleSubjectPress(item)}
-                />
-              )}
-            />
-          </View>
+          <SubjectCards/>
           {/* <TouchableOpacity onPress={handleViewAllSubjects} style={{ alignSelf: 'flex-end', margin: 16 }}>
             <Text style={{ color: '#2563eb', fontWeight: '500' }}>View All</Text>
           </TouchableOpacity> */}

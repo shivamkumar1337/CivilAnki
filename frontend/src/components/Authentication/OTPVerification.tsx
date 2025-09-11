@@ -63,18 +63,19 @@ export function OTPVerification() {
       if (!success) throw new Error(error);
       
       // Update user data in Redux
-      const userData = {
-        id: data?.id || `user_${Date.now()}`,
-        name: data?.name || name || 'User',
+      const userData = data?.user;
+
+      const userDataStore  = {
+        id: userData?.id ,
         mobile: mobile,
-        email: data?.email || '',
-        avatar: data?.avatar || '👤',
+        email: userData?.email || '',
         isAuthenticated: true,
-        streak: data?.streak || 0,
+        // ensure session is undefined instead of null so it matches Partial<User> type
+        session: data?.session ?? undefined,
       };
       
       // Set user data first
-      dispatch(setUser(userData));
+      dispatch(setUser(userDataStore));
       // Then set authenticated status
       dispatch(setAuthenticated(true));
       
