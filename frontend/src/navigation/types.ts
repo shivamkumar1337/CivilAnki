@@ -34,7 +34,7 @@ export type MainStackParamList = {
 
 export type HomeTabParamList = {
   Home: undefined;
-  Practice: undefined;
+  Search: undefined;
   History: undefined;
-  Profile: undefined;
+  Courses: undefined;
 };

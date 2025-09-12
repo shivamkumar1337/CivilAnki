@@ -9,6 +9,7 @@ import { useDispatch } from 'react-redux';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { AuthStackParamList } from '../../navigation/types';
 import { LoadingSpinner } from '../common/LoadingSpinner';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 type MobileAuthProps = {
   onSubmit: (mobile: string, isValid: boolean) => {sendSMSOTP: any};
@@ -82,7 +83,7 @@ export function MobileAuth() {
   };
 
   return (
-    <View style={styles.container}>
+      <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={Colors.light.background} />
       
       {/* Header */}
@@ -225,7 +226,7 @@ export function MobileAuth() {
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
-    </View>
+    </SafeAreaView>
   );
 }
 
