@@ -10,6 +10,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { useDispatch } from 'react-redux';
 import { setAuthenticated } from '../../store/slices/authSlice';
 import { setUser } from '../../store/slices/userSlice'; // Add this import
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 type OTPVerificationRouteProp = RouteProp<AuthStackParamList, 'OTPVerification'>;
 type OTPVerificationNavigationProp = StackNavigationProp<AuthStackParamList, 'OTPVerification'>;
@@ -180,8 +181,8 @@ export function OTPVerification() {
   }
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={Colors.light.background} />
+        <SafeAreaView style={styles.container}>
+    <StatusBar barStyle="dark-content" backgroundColor={Colors.light.background} />
       
       {/* Header */}
       <View style={styles.header}>
@@ -319,7 +320,7 @@ export function OTPVerification() {
           </LinearGradient>
         </TouchableOpacity>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 

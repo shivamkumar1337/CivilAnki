@@ -1,29 +1,46 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { AuthState } from '../../types';
+
+export interface AuthState {
+  mobile: string;
+  name: string;
+  isLogin: boolean; // true for sign in, false for sign up
+}
 
 interface AuthSliceState {
   isAuthenticated: boolean;
   authData: AuthState;
   isLoading: boolean;
   error: string | null;
+  otpSent: boolean;
+  pendingVerification: boolean;
 }
 
 const initialState: AuthSliceState = {
   isAuthenticated: false,
   authData: {
     mobile: '',
+    name: '',
     isLogin: true,
   },
   isLoading: false,
   error: null,
+  otpSent: false,
+  pendingVerification: false,
 };
 
 const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    setAuthData: (state, action: PayloadAction<AuthState>) => {
-      state.authData = action.payload;
+    setAuthData: (state, action: PayloadAction<Partial<AuthState>>) => {
+      state.authData = { ...state.authData, ...action.payload };
+    },
+    setAuthMode: (state, action: PayloadAction<boolean>) => {
+      state.authData.isLogin = action.payload;
+      // Clear form data when switching modes
+      if (!action.payload) { // switching to sign up
+        state.authData.name = '';
+      }
     },
     setAuthenticated: (state, action: PayloadAction<boolean>) => {
       state.isAuthenticated = action.payload;
@@ -34,13 +51,33 @@ const authSlice = createSlice({
     setError: (state, action: PayloadAction<string | null>) => {
       state.error = action.payload;
     },
-    logout: (state) => {
-      state.isAuthenticated = false;
-      state.authData = initialState.authData;
+    setOtpSent: (state, action: PayloadAction<boolean>) => {
+      state.otpSent = action.payload;
+    },
+    setPendingVerification: (state, action: PayloadAction<boolean>) => {
+      state.pendingVerification = action.payload;
+    },
+    resetAuthFlow: (state) => {
+      state.otpSent = false;
+      state.pendingVerification = false;
       state.error = null;
+      state.isLoading = false;
+    },
+    logout: (state) => {
+      return { ...initialState };
     },
   },
 });
 
-export const { setAuthData, setAuthenticated, setLoading, setError, logout } = authSlice.actions;
+export const { 
+  setAuthData, 
+  setAuthMode,
+  setAuthenticated, 
+  setLoading, 
+  setError, 
+  setOtpSent,
+  setPendingVerification,
+  resetAuthFlow,
+  logout 
+} = authSlice.actions;
 export default authSlice.reducer;

@@ -1,4 +1,5 @@
 import React from 'react';
+import { View, StyleSheet } from 'react-native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MainStackParamList, HomeTabParamList } from './types';
@@ -12,7 +13,7 @@ import { SessionSummary } from '../components/SessionSummary';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../constants/Colors';
 import { Profile } from '../components/profile/Profile';
-
+import { useSafeAreaInsetsStyle } from '../utils/useSafeAreaInsetsStyle';
 
 const Stack = createStackNavigator<MainStackParamList>();
 const Tab = createBottomTabNavigator<HomeTabParamList>();
@@ -27,11 +28,11 @@ const HomeTabs: React.FC = () => {
 
           if (route.name === 'Home') {
             iconName = focused ? 'home' : 'home-outline';
-          } else if (route.name === 'Practice') {
+          } else if (route.name === 'Search') {
             iconName = focused ? 'library' : 'library-outline';
           } else if (route.name === 'History') {
             iconName = focused ? 'time' : 'time-outline';
-          } else if (route.name === 'Profile') {
+          } else if (route.name === 'Courses') {
             iconName = focused ? 'person' : 'person-outline';
           } else {
             iconName = 'help-outline';
@@ -61,37 +62,48 @@ const HomeTabs: React.FC = () => {
         options={{ title: 'Home' }}
       />
       <Tab.Screen 
-        name="Practice" 
-        component={SubjectSelection}
-        options={{ title: 'Practice' }}
+        name="Search" 
+        component={Home}
+        options={{ title: 'Search' }}
       />
+        <Tab.Screen 
+          name="Courses" 
+          component={Profile}
+          options={{ title: 'Courses' }}
+        />
       <Tab.Screen 
         name="History" 
         component={QuestionHistory}
         options={{ title: 'History' }}
-      />
-      <Tab.Screen 
-        name="Profile" 
-        component={Profile}
-        options={{ title: 'Profile' }}
       />
     </Tab.Navigator>
   );
 };
 
 const MainNavigator: React.FC = () => {
+  const safeAreaStyle = useSafeAreaInsetsStyle(['top', 'bottom']);
+
   return (
-    <Stack.Navigator
-      initialRouteName="HomeTabs"
-      screenOptions={{ headerShown: false }}
-    >
-      <Stack.Screen name="HomeTabs" component={HomeTabs} />
-      <Stack.Screen name="Subjects" component={SubjectSelection} />
-      <Stack.Screen name="SubTopics" component={SubTopicSelection} />
-      <Stack.Screen name="Practice" component={QuestionCard} />
-      <Stack.Screen name="Summary" component={SessionSummary} />
-    </Stack.Navigator>
+    <View style={[styles.container, safeAreaStyle]}>
+      <Stack.Navigator
+        initialRouteName="HomeTabs"
+        screenOptions={{ headerShown: false }}
+      >
+        <Stack.Screen name="HomeTabs" component={HomeTabs} />
+        <Stack.Screen name="Subjects" component={SubjectSelection} />
+        <Stack.Screen name="SubTopics" component={SubTopicSelection} />
+        <Stack.Screen name="Practice" component={QuestionCard} />
+        <Stack.Screen name="Summary" component={SessionSummary} />
+      </Stack.Navigator>
+    </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.light.background,
+  },
+});
 
 export default MainNavigator;

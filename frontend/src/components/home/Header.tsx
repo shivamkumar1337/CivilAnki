@@ -73,7 +73,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingBottom: 10,
+    paddingTop: 2,
     // backgroundColor: Colors.light.background,
   },
   userSection: {

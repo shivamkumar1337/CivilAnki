@@ -7,6 +7,7 @@ import { useDispatch } from 'react-redux';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { Colors } from '../../constants/Colors';
 import { AuthStackParamList } from '../../navigation/types';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get('window');
 
@@ -22,7 +23,7 @@ export function AuthOptions() {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={Colors.light.background} />
       
       {/* Hero Section with animated gradient */}
@@ -150,7 +151,7 @@ export function AuthOptions() {
           </View>
         </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
