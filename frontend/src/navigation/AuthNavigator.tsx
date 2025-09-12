@@ -4,7 +4,7 @@ import { AuthStackParamList } from './types';
 import { AuthOptions } from '../components/Authentication/AuthOptions';
 import { MobileAuth } from '../components/Authentication/MobileAuth';
 import { OTPVerification } from '../components/Authentication/OTPVerification';
-
+import { UserOnboarding } from '../components/Authentication/UserOnboarding';
 const Stack = createStackNavigator<AuthStackParamList>();
 
 const AuthNavigator: React.FC = () => {
@@ -17,6 +17,7 @@ const AuthNavigator: React.FC = () => {
       <Stack.Screen name="AuthOptions" component={AuthOptions} />
       <Stack.Screen name="MobileAuth" component={MobileAuth} />
       <Stack.Screen name="OTPVerification" component={OTPVerification} />
+      <Stack.Screen name="UserOnboarding" component={UserOnboarding} />
     </Stack.Navigator>
   );
 };

@@ -14,6 +14,11 @@ export type AuthStackParamList = {
     isLogin: boolean;
     name?: string;
   };
+  UserOnboarding: {
+    userId: string;
+    mobile: string;
+  };
+
   // Home: undefined;
   // Onboarding: undefined;
 };

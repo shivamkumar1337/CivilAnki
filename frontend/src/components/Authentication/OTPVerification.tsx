@@ -49,53 +49,66 @@ export function OTPVerification() {
     };
   }, []);
 
-  const handleVerify = async () => {
-    const otpString = otp.join('');
-    if (otpString.length !== 6) return;
+// In your existing OTPVerification.tsx file, update the handleVerify function:
+const handleVerify = async () => {
+  const otpString = otp.join('');
+  if (otpString.length !== 6) return;
 
-    Keyboard.dismiss();
-    setLoading(true);
-    setError('');
+  Keyboard.dismiss();
+  setLoading(true);
+  setError('');
 
-    try {
-      const { success, data, error } = await authService.verifyOTP(mobile, otpString);
-      if (!success) throw new Error(error);
-      console
+  try {
+    const { success, data, error } = await authService.verifyOTP(mobile, otpString);
+    if (!success) throw new Error(error);
 
-      const userData = data?.user;
+    const userData = data?.user;
+    
+    if (isLogin) {
+      // Existing user - get their profile and complete authentication
+      const { data: profileData } = await authService.getUserProfile(userData?.id);
+      
       const userDataStore = {
         id: userData?.id,
         mobile: mobile,
+        name: profileData?.name || '',
+        goal: profileData?.goal || '',
+        target_year: profileData?.target_year || new Date().getFullYear(),
         email: userData?.email || '',
         isAuthenticated: true,
         session: data?.session ?? undefined,
+        onboarding_completed: profileData?.onboarding_completed || false,
       };
-
-      // If this is a signup, update the user's name in the profiles table
-           if (!isLogin && name && userData?.id) {
-        const profileResp = await authService.signupProfile(userData.id, name);
-        // signupProfile may return different shapes; check for an error safely
-        const profileError = (profileResp as any).error ?? null;
-        if (profileError) {
-          setError('Failed to save profile name.');
-          setLoading(false);
-          return;
-        }
-      }
 
       dispatch(setUser(userDataStore));
       dispatch(setAuthenticated(true));
       setIsSuccess(true);
+      
+      // Navigation will be handled by Redux state change to home/main app
+    } else {
 
+      setIsSuccess(true);
+      
+      // Navigate to UserOnboarding after success animation
       setTimeout(() => {
-        // Navigation handled by Redux state change
+        // Ensure userId is present before navigating (navigation types require a string)
+        if (!userData?.id) {
+          setError('Missing user id. Please try again.');
+          return;
+        }
+        navigation.navigate('UserOnboarding', {
+          userId: userData.id,
+          mobile: mobile,
+        });
       }, 1500);
-
-    } catch (err) {
-      setError('Invalid OTP. Please try again.');
     }
-    setLoading(false);
-  };
+  } catch (err) {
+    setError('Invalid OTP. Please try again.');
+  }
+
+  setLoading(false);
+};
+
 
   const handleOTPChange = (text: string, index: number) => {
     const newOtp = [...otp];
