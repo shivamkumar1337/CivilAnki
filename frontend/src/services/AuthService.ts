@@ -1,22 +1,9 @@
-import * as Google from 'expo-auth-session/providers/google';
-import * as AppleAuthentication from 'expo-apple-authentication';
 import { Platform } from 'react-native';
 import axios from 'axios';
 import { createClient } from '@supabase/supabase-js';
 
 const API_BASE = 'http://localhost:8000'; // Change to your backend URL
 
-export interface SocialLoginResult {
-  success: boolean;
-  user?: {
-    id: string;
-    name: string;
-    email: string;
-    avatar?: string;
-    provider: 'google' | 'apple';
-  };
-  error?: string;
-}
 
 const supabase = createClient(
   process.env.EXPO_PUBLIC_SUPABASE_URL!,
@@ -43,6 +30,7 @@ class AuthService {
         type: 'sms'
       });
       if (error) throw error;
+      console.log("verifyOTP response data:", data);
       return { 
         success: true, data };
     } catch (error: any) {

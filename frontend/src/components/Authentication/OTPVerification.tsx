@@ -10,6 +10,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { useDispatch } from 'react-redux';
 import { setAuthenticated } from '../../store/slices/authSlice';
 import { setUser } from '../../store/slices/userSlice'; // Add this import
+import { setSession } from '../../store/slices/authSlice'; // Add this import
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 type OTPVerificationRouteProp = RouteProp<AuthStackParamList, 'OTPVerification'>;
@@ -77,6 +78,8 @@ export function OTPVerification() {
       
       // Set user data first
       dispatch(setUser(userDataStore));
+      // Save session to Redux and AsyncStorage
+      dispatch(setSession(data?.session));
       // Then set authenticated status
       dispatch(setAuthenticated(true));
       

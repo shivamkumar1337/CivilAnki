@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export interface AuthState {
   mobile: string;
@@ -13,8 +14,8 @@ interface AuthSliceState {
   error: string | null;
   otpSent: boolean;
   pendingVerification: boolean;
+  session: any | null;
 }
-
 const initialState: AuthSliceState = {
   isAuthenticated: false,
   authData: {
@@ -26,6 +27,7 @@ const initialState: AuthSliceState = {
   error: null,
   otpSent: false,
   pendingVerification: false,
+  session: null,
 };
 
 const authSlice = createSlice({
@@ -44,6 +46,12 @@ const authSlice = createSlice({
     },
     setAuthenticated: (state, action: PayloadAction<boolean>) => {
       state.isAuthenticated = action.payload;
+      // Persist to AsyncStorage
+      AsyncStorage.setItem('isAuthenticated', JSON.stringify(action.payload));
+    },
+    setSession: (state, action: PayloadAction<any>) => {
+      state.session = action.payload;
+      AsyncStorage.setItem('session', JSON.stringify(action.payload));
     },
     setLoading: (state, action: PayloadAction<boolean>) => {
       state.isLoading = action.payload;
@@ -64,7 +72,10 @@ const authSlice = createSlice({
       state.isLoading = false;
     },
     logout: (state) => {
-      return { ...initialState };
+      state.isAuthenticated = false;
+      state.session = null;
+      AsyncStorage.removeItem('isAuthenticated');
+      AsyncStorage.removeItem('session');
     },
   },
 });
@@ -73,6 +84,7 @@ export const {
   setAuthData, 
   setAuthMode,
   setAuthenticated, 
+  setSession,
   setLoading, 
   setError, 
   setOtpSent,
