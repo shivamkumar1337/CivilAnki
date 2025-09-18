@@ -4,7 +4,7 @@ import { Platform } from 'react-native';
 import axios from 'axios';
 import { createClient } from '@supabase/supabase-js';
 
-const API_BASE = 'http://localhost:8000'; // Change to your backend URL
+const API_BASE = process.env.EXPO_PUBLIC_API_URL; // Change to your backend URL
 
 export interface SocialLoginResult {
   success: boolean;
@@ -46,6 +46,21 @@ const supabase = createClient(
 );
 
 class AuthService {
+async updateProfile(updates: { 
+  name: string;
+  goal: string;
+  target_year: number;
+  status?: number;
+  mobile?: string;
+  email?: string;
+}) {
+  try {
+    const res = await axios.post(`${API_BASE}/profile/updateprofile`, { updates });
+    return res.data; // Adjust based on your backend's response
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
   
   // Move this method inside the class properly
   // getStoredOTP(mobile: string): string | null {
@@ -110,131 +125,47 @@ class AuthService {
     }
   }
 
-  // SMS OTP logic - Fixed
-  async sendSMSOTP(phoneNumber: string): Promise<SMSResponse> {
-    try {
-      // Validate phone number format
-      if (!phoneNumber || phoneNumber.length < 10) {
-        return { success: false, error: 'Invalid phone number' };
-      }
 
-      // Clean up expired OTPs first
-      this.cleanupExpiredOTPs();
-
-      // Generate and store OTP
-      const otp = this.generateOTP();
-      const expires = Date.now() + 5 * 60 * 1000; // 5 minutes
-      
-      otpStorage.set(phoneNumber, { otp, expires, attempts: 0 });
-      
-      console.log(`Demo OTP for ${phoneNumber}: ${otp}`); // For testing
-      
-      // Implement this endpoint in your backend if not present
-      const res = await axios.post(`${API_BASE}/auth/send-otp`, { mobile: phoneNumber });
-      return res.data;
-    } catch (error) {
-      return { success: false, error: 'Failed to send OTP' };
-    }
+  //check user
+async checkUserExists(mobile: string) {
+    // Assumes backend expects ?phone=+91XXXXXXXXXX
+    const res = await axios.post(`${API_BASE}/auth/check-user-exists`, 
+ { credential: mobile, authType: "phone" }
+    );
+    console.log("checkUserExists response:", res.data);
+    return res.data; // { exists: true/false, ... }
   }
 
-  async verifySMSOTP(phoneNumber: string, otp: string): Promise<OTPVerificationResult> {
-    try {
-      const stored = otpStorage.get(phoneNumber);
-      
-      if (!stored) {
-        return { success: false, error: 'OTP not found. Please request a new one.' };
-      }
 
-      if (Date.now() > stored.expires) {
-        otpStorage.delete(phoneNumber);
-        return { success: false, error: 'OTP expired. Please request a new one.' };
-      }
 
-      if (stored.attempts >= 3) {
-        otpStorage.delete(phoneNumber);
-        return { success: false, error: 'Too many failed attempts. Please request a new OTP.' };
-      }
-
-      if (stored.otp !== otp.trim()) {
-        stored.attempts++;
-        otpStorage.set(phoneNumber, stored); // Update attempts
-        return { 
-          success: false, 
-          error: `Invalid OTP. ${3 - stored.attempts} attempts remaining.` 
-        };
-      }
-
-      // Success - clean up
-      otpStorage.delete(phoneNumber);
-      
-      // Implement this endpoint in your backend if not present
-      const res = await axios.post(`${API_BASE}/auth/verify-otp`, { mobile: phoneNumber, otp });
-      return res.data;
-    } catch (error) {
-      return { success: false, error: 'OTP verification failed' };
-    }
-  }
-
-  // Helper method to generate OTP
-  private generateOTP(): string {
-    // Generate random 6-digit OTP for production
-    // return Math.floor(100000 + Math.random() * 900000).toString();
-    return "123456"
-  }
 
   // Helper method to clean expired OTPs
-  private cleanupExpiredOTPs(): void {
-    const now = Date.now();
-    for (const [phone, data] of otpStorage.entries()) {
-      if (now > data.expires) {
-        otpStorage.delete(phone);
-      }
-    }
-  }
 
   // // Method to clear all OTPs (useful for testing)
   // clearAllOTPs(): void {
   //   otpStorage.clear();
   // }
 
+  // Send OTP via backend
   async sendOTP(phone: string) {
     try {
-      console.log("sendOTP called with phone:", phone);
-      const { data, error } = await supabase.auth.signInWithOtp({ phone });
-      if (error) throw error;
-      return { success: true, data };
+      const res = await axios.post(`${API_BASE}/auth/otp`, { phone });
+      return res.data; // { success: boolean, ... }
     } catch (error: any) {
       return { success: false, error: error.message };
     }
   }
 
+  // Verify OTP via backend
   async verifyOTP(phone: string, token: string) {
     try {
-      const { data, error } = await supabase.auth.verifyOtp({
+      const res = await axios.post(`${API_BASE}/auth/verify-otp`, {
         phone,
-        token,
-        type: 'sms'
+        token
       });
-      if (error) throw error;
-      return { success: true, data };
+      return res.data; // { success: boolean, ... }
     } catch (error: any) {
       return { success: false, error: error.message };
-    }
-  }
-
-  async checkUserExists(mobile: string) {
-    try {
-      // Query the 'users' table for a user with the given mobile number
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('mobile', mobile)
-        .single();
-
-      if (error && error.code !== 'PGRST116') throw error; // PGRST116: No rows found
-      return { data, exists: !!data };
-    } catch (error: any) {
-      return { data: null, exists: false, error: error.message };
     }
   }
 }

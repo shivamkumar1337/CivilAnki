@@ -60,49 +60,32 @@ const handleVerify = async () => {
   setError('');
 
   try {
-    const { success, data, error } = await authService.verifyOTP(mobile, otpString);
+    const { success, user, error, session } = await authService.verifyOTP(mobile, otpString);
     if (!success) throw new Error(error);
+    console.log('Verified user:', session);
 
-    const userData = data?.user;
-    
-    if (isLogin) {
-      // Existing user - get their profile and complete authentication
-      const { data: profileData } = await authService.getUserProfile(userData?.id);
-      
-      const userDataStore = {
-        id: userData?.id,
-        mobile: mobile,
-        name: profileData?.name || '',
-        goal: profileData?.goal || '',
-        target_year: profileData?.target_year || new Date().getFullYear(),
-        email: userData?.email || '',
-        isAuthenticated: true,
-        session: data?.session ?? undefined,
-        onboarding_completed: profileData?.onboarding_completed || false,
-      };
+    setIsSuccess(true);
 
-      dispatch(setUser(userDataStore));
-      dispatch(setAuthenticated(true));
-      setIsSuccess(true);
-      
-      // Navigation will be handled by Redux state change to home/main app
-    } else {
-
-      setIsSuccess(true);
-      
-      // Navigate to UserOnboarding after success animation
-      setTimeout(() => {
-        // Ensure userId is present before navigating (navigation types require a string)
-        if (!userData?.id) {
-          setError('Missing user id. Please try again.');
-          return;
-        }
+    // Navigate to home
+    if(isLogin){
+//         setTimeout(() => {
+//       // Ensure userId is present before navigating (navigation types require a string)
+//        (navigation as any).reset({
+//   index: 0,
+//   routes: [{ name: 'HomeTabs' }],
+// });
+//       }, 1500);
+    }
+    else{
+    setTimeout(() => {
+      // Ensure userId is present before navigating (navigation types require a string)
         navigation.navigate('UserOnboarding', {
-          userId: userData.id,
+          userId: user.id,
           mobile: mobile,
         });
       }, 1500);
     }
+    
   } catch (err) {
     setError('Invalid OTP. Please try again.');
   }
@@ -175,24 +158,6 @@ const handleVerify = async () => {
     return mobile.replace(/(\+91)(\d{5})(\d{5})/, '$1 $2 *****');
   };
 
-  if (isSuccess) {
-    return (
-      <View style={styles.successContainer}>
-        <StatusBar barStyle="dark-content" backgroundColor={Colors.light.background} />
-        <LinearGradient
-          colors={[Colors.light.success + '20', Colors.light.success + '10']}
-          style={styles.successIconContainer}
-        >
-          <Ionicons name="checkmark-circle" size={56} color={Colors.light.success} />
-        </LinearGradient>
-        <Text style={styles.successTitle}>Verification Successful!</Text>
-        <Text style={styles.successSubtitle}>
-          Welcome to CivilAnki! Setting up your account...
-        </Text>
-        <ActivityIndicator size="large" color={Colors.light.primary} style={{ marginTop: 20 }} />
-      </View>
-    );
-  }
 
   return (
         <SafeAreaView style={styles.container}>

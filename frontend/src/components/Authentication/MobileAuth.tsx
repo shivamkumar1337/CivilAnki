@@ -70,51 +70,34 @@ export function MobileAuth() {
     return isMobileValid;
   };
 
-  const handleContinue = async () => {
-    // console.log('handleContinue called. isValid:', isValid, 'isLoading:', isLoading);
-    
-    // if (!isValid || isLoading) {
-    //   console.log('Button disabled - validation or loading issue');
-    //   return;
-    // }
-    
-    try {
-      setIsLoading(true);
-      setError('');
-      
-      const fullMobile = `+91${mobile}`;
-      console.log('Processing mobile:', fullMobile);
-      
-      // // First, check if user exists in profiles table
-      // console.log("Checking if user exists for mobile:", fullMobile);
-      // const { data: profileData, error: checkError } = await authService.checkUserExists(fullMobile);
-      
-      // const userExists = !!profileData;
-      // console.log("User exists check result:", { userExists, profileData });
-      
-      // Send OTP regardless of user existence
-      console.log("Sending OTP to:", fullMobile);
-      const result = await authService.sendOTP(fullMobile);
-      
-      if (result.success) {
-        console.log("OTP sent successfully, navigating to verification");
+const handleContinue = async () => {
+  try {
+    setIsLoading(true);
+    setError('');
+    const fullMobile = `+91${mobile}`;
+    // 1. Check if user exists
+    const { data } = await authService.checkUserExists(fullMobile);
+
+    // 2. Send OTP
+    const result = await authService.sendOTP(fullMobile);
+
+    if (result.success) {
+ 
         navigation.navigate('OTPVerification', { 
           mobile: fullMobile, 
-          // isLogin: userExists,
-          isLogin: true,
+          isLogin: false,
           name: undefined,
         });
-      } else {
-        console.log("Failed to send OTP:", result.error);
-        setError(result.error || 'Failed to send OTP. Please try again.');
-      }
-    } catch (error: any) {
-      console.log("Error in handleContinue:", error);
-      setError('Something went wrong. Please try again later.');
-    } finally {
-      setIsLoading(false);
+      
+    } else {
+      setError(result.error || 'Failed to send OTP. Please try again.');
     }
-  };
+  } catch (error: any) {
+    setError('Error: ' + (error || 'Something went wrong. Please try again.'));
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   // Debug: Log button state
   const buttonDisabled = !isValid || isLoading;

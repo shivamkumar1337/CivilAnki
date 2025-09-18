@@ -25,8 +25,10 @@ import { setAuthenticated } from '../../store/slices/authSlice';
 import { setUser } from '../../store/slices/userSlice';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+
 type UserOnboardingRouteProp = RouteProp<AuthStackParamList, 'UserOnboarding'>;
 type UserOnboardingNavigationProp = StackNavigationProp<AuthStackParamList, 'UserOnboarding'>;
+
 
 interface GoalOption {
   id: string;
@@ -35,6 +37,7 @@ interface GoalOption {
   icon: string;
   color: string;
 }
+
 
 const GOAL_OPTIONS: GoalOption[] = [
   {
@@ -67,8 +70,10 @@ const GOAL_OPTIONS: GoalOption[] = [
   },
 ];
 
+
 const CURRENT_YEAR = new Date().getFullYear();
 const TARGET_YEARS = Array.from({ length: 5 }, (_, i) => CURRENT_YEAR + i);
+
 
 export function UserOnboarding() {
   const route = useRoute<UserOnboardingRouteProp>();
@@ -81,22 +86,15 @@ export function UserOnboarding() {
   const [targetYear, setTargetYear] = useState<number>(CURRENT_YEAR + 1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [currentStep, setCurrentStep] = useState(1); // 1: Name, 2: Goal Selection
 
-  const handleNext = () => {
-    if (currentStep === 1) {
-      if (name.trim().length < 2) {
-        setError('Please enter a valid name (at least 2 characters)');
-        return;
-      }
-      setError('');
-      setCurrentStep(2);
-    } else {
-      handleComplete();
-    }
-  };
 
   const handleComplete = async () => {
+    // Validate all fields
+    if (name.trim().length < 2) {
+      setError('Please enter a valid name (at least 2 characters)');
+      return;
+    }
+    
     if (!selectedGoal) {
       setError('Please select your goal');
       return;
@@ -108,20 +106,13 @@ export function UserOnboarding() {
 
     try {
       // Update user profile with onboarding data
-      const profileData = {
-        name: name.trim(),
-        goal: selectedGoal,
-        target_year: targetYear,
-        onboarding_completed: true,
-      };
-  setLoading(true);
-       await authService.createProfile({
-      id: userId, // get from session or OTP verification
+      await authService.updateProfile({
       name,
       goal:selectedGoal,
       target_year:targetYear,
-      mobile,
+      status:2
     });
+
 
       // Set user data in Redux store
       const userDataStore = {
@@ -146,121 +137,7 @@ export function UserOnboarding() {
     setLoading(false);
   };
 
-  const renderNameStep = () => (
-    <View style={styles.stepContainer}>
-      <View style={styles.stepHeader}>
-        <Text style={styles.stepTitle}>What should we call you?</Text>
-        <Text style={styles.stepSubtitle}>
-          Enter your name to personalize your learning experience
-        </Text>
-      </View>
-
-      <View style={styles.inputSection}>
-        <Text style={styles.inputLabel}>Full Name</Text>
-        <TextInput
-          style={styles.nameInput}
-          placeholder="Enter your full name"
-          placeholderTextColor={Colors.light.mutedForeground}
-          value={name}
-          onChangeText={(text) => {
-            setName(text);
-            setError('');
-          }}
-          editable={!loading}
-          autoFocus
-          autoCapitalize="words"
-          autoCorrect={false}
-        />
-      </View>
-    </View>
-  );
-
-  const renderGoalStep = () => (
-    <View style={styles.stepContainer}>
-      <View style={styles.stepHeader}>
-        <Text style={styles.stepTitle}>Choose Your Goal</Text>
-        <Text style={styles.stepSubtitle}>
-          Select your target exam to get personalized content
-        </Text>
-      </View>
-
-      <View style={styles.goalsGrid}>
-        {GOAL_OPTIONS.map((goal) => (
-          <TouchableOpacity
-            key={goal.id}
-            style={[
-              styles.goalTile,
-              selectedGoal === goal.id && [
-                styles.goalTileSelected,
-                { borderColor: goal.color }
-              ]
-            ]}
-            onPress={() => {
-              setSelectedGoal(goal.id);
-              setError('');
-            }}
-            activeOpacity={0.8}
-          >
-            <LinearGradient
-              colors={
-                selectedGoal === goal.id
-                  ? [goal.color + '20', goal.color + '10']
-                  : [Colors.light.secondary, Colors.light.secondary]
-              }
-              style={styles.goalIconContainer}
-            >
-              <Ionicons
-                name={goal.icon as any}
-                size={24}
-                color={selectedGoal === goal.id ? goal.color : Colors.light.mutedForeground}
-              />
-            </LinearGradient>
-            <Text style={[
-              styles.goalTitle,
-              selectedGoal === goal.id && { color: goal.color }
-            ]}>
-              {goal.title}
-            </Text>
-            <Text style={styles.goalSubtitle}>{goal.subtitle}</Text>
-            {selectedGoal === goal.id && (
-              <View style={[styles.selectedIndicator, { backgroundColor: goal.color }]}>
-                <Ionicons name="checkmark" size={12} color="white" />
-              </View>
-            )}
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      {selectedGoal && (
-        <View style={styles.yearSection}>
-          <Text style={styles.yearLabel}>Target Year</Text>
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.yearScroll}
-          >
-            {TARGET_YEARS.map((year) => (
-              <TouchableOpacity
-                key={year}
-                style={[
-                  styles.yearTile,
-                  targetYear === year && styles.yearTileSelected
-                ]}
-                onPress={() => setTargetYear(year)}
-              >
-                <Text style={[
-                  styles.yearText,
-                  targetYear === year && styles.yearTextSelected
-                ]}>
-                  {year}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-      )}
-    </View>
-  );
+  const isFormValid = name.trim().length >= 2 && selectedGoal;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -274,24 +151,12 @@ export function UserOnboarding() {
         <View style={styles.header}>
           <TouchableOpacity 
             style={styles.backButton} 
-            onPress={() => currentStep === 1 ? navigation.goBack() : setCurrentStep(1)}
+            onPress={() => navigation.goBack()}
           >
             <Ionicons name="arrow-back" size={22} color={Colors.light.foreground} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Setup Profile</Text>
-          <View style={styles.stepIndicator}>
-            <Text style={styles.stepText}>{currentStep}/2</Text>
-          </View>
-        </View>
-
-        {/* Progress Bar */}
-        <View style={styles.progressContainer}>
-          <View style={styles.progressTrack}>
-            <LinearGradient
-              colors={[Colors.light.primary, '#1D4ED8']}
-              style={[styles.progressFill, { width: `${(currentStep / 2) * 100}%` }]}
-            />
-          </View>
+          <View style={styles.placeholder} />
         </View>
 
         {/* Content */}
@@ -301,7 +166,116 @@ export function UserOnboarding() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {currentStep === 1 ? renderNameStep() : renderGoalStep()}
+          {/* Main Header */}
+          {/* <View style={styles.mainHeader}>
+            <Text style={styles.mainTitle}>Let's get you started</Text>
+            <Text style={styles.mainSubtitle}>
+              Tell us about yourself to personalize your learning experience
+            </Text>
+          </View> */}
+
+          {/* Name Section */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>What should we call you?</Text>
+            <TextInput
+              style={styles.nameInput}
+              placeholder="Enter your full name"
+              placeholderTextColor={Colors.light.mutedForeground}
+              value={name}
+              onChangeText={(text) => {
+                setName(text);
+                setError('');
+              }}
+              editable={!loading}
+              autoCapitalize="words"
+              autoCorrect={false}
+            />
+          </View>
+
+          {/* Goal Selection Section */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Choose Your Goal</Text>
+            {/* <Text style={styles.sectionSubtitle}>
+              Select your target exam to get personalized content
+            </Text> */}
+            
+            <View style={styles.goalsGrid}>
+              {GOAL_OPTIONS.map((goal) => (
+                <TouchableOpacity
+                  key={goal.id}
+                  style={[
+                    styles.goalTile,
+                    selectedGoal === goal.id && [
+                      styles.goalTileSelected,
+                      { borderColor: goal.color }
+                    ]
+                  ]}
+                  onPress={() => {
+                    setSelectedGoal(goal.id);
+                    setError('');
+                  }}
+                  activeOpacity={0.8}
+                >
+                  <LinearGradient
+                    colors={
+                      selectedGoal === goal.id
+                        ? [goal.color + '20', goal.color + '10']
+                        : [Colors.light.secondary, Colors.light.secondary]
+                    }
+                    style={styles.goalIconContainer}
+                  >
+                    <Ionicons
+                      name={goal.icon as any}
+                      size={24}
+                      color={selectedGoal === goal.id ? goal.color : Colors.light.mutedForeground}
+                    />
+                  </LinearGradient>
+                  <Text style={[
+                    styles.goalTitle,
+                    selectedGoal === goal.id && { color: goal.color }
+                  ]}>
+                    {goal.title}
+                  </Text>
+                  <Text style={styles.goalSubtitle}>{goal.subtitle}</Text>
+                  {selectedGoal === goal.id && (
+                    <View style={[styles.selectedIndicator, { backgroundColor: goal.color }]}>
+                      <Ionicons name="checkmark" size={12} color="white" />
+                    </View>
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          {/* Target Year Section */}
+          {selectedGoal && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Target Year</Text>
+              <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.yearScroll}
+              >
+                {TARGET_YEARS.map((year) => (
+                  <TouchableOpacity
+                    key={year}
+                    style={[
+                      styles.yearTile,
+                      targetYear === year && styles.yearTileSelected
+                    ]}
+                    onPress={() => setTargetYear(year)}
+                  >
+                    <Text style={[
+                      styles.yearText,
+                      targetYear === year && styles.yearTextSelected
+                    ]}>
+                      {year}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          )}
 
           {/* Error Display */}
           {error ? (
@@ -312,27 +286,20 @@ export function UserOnboarding() {
           ) : null}
         </ScrollView>
 
-        {/* Continue Button */}
+        {/* Complete Button */}
         <View style={styles.bottomSection}>
           <TouchableOpacity
             style={[
-              styles.continueButton,
-              ((currentStep === 1 && name.trim().length < 2) || 
-               (currentStep === 2 && !selectedGoal) || 
-               loading) && styles.continueButtonDisabled
+              styles.completeButton,
+              (!isFormValid || loading) && styles.completeButtonDisabled
             ]}
-            disabled={
-              (currentStep === 1 && name.trim().length < 2) || 
-              (currentStep === 2 && !selectedGoal) || 
-              loading
-            }
-            onPress={handleNext}
+            disabled={!isFormValid || loading}
+            onPress={handleComplete}
             activeOpacity={0.9}
           >
             <LinearGradient
               colors={
-                ((currentStep === 1 && name.trim().length >= 2) || 
-                 (currentStep === 2 && selectedGoal)) && !loading
+                isFormValid && !loading
                   ? [Colors.light.primary, '#1D4ED8']
                   : [Colors.light.muted, Colors.light.muted]
               }
@@ -344,19 +311,16 @@ export function UserOnboarding() {
                 ) : (
                   <>
                     <Text style={[
-                      styles.continueButtonText,
-                      ((currentStep === 1 && name.trim().length < 2) || 
-                       (currentStep === 2 && !selectedGoal) || 
-                       loading) && styles.continueButtonTextDisabled
+                      styles.completeButtonText,
+                      (!isFormValid || loading) && styles.completeButtonTextDisabled
                     ]}>
-                      {currentStep === 2 ? 'Complete Setup' : 'Continue'}
+                      Complete Setup
                     </Text>
                     <Ionicons 
-                      name={currentStep === 2 ? "checkmark" : "arrow-forward"} 
-                      size={16} 
+                      name="checkmark-circle" 
+                      size={18} 
                       color={
-                        ((currentStep === 1 && name.trim().length >= 2) || 
-                         (currentStep === 2 && selectedGoal)) && !loading
+                        isFormValid && !loading
                           ? Colors.light.primaryForeground 
                           : Colors.light.mutedForeground
                       } 
@@ -371,6 +335,7 @@ export function UserOnboarding() {
     </SafeAreaView>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {
@@ -401,30 +366,8 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: Colors.light.foreground,
   },
-  stepIndicator: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    backgroundColor: Colors.light.primary + '10',
-    borderRadius: 12,
-  },
-  stepText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: Colors.light.primary,
-  },
-  progressContainer: {
-    paddingHorizontal: 20,
-    paddingBottom: 24,
-  },
-  progressTrack: {
-    height: 4,
-    backgroundColor: Colors.light.secondary,
-    borderRadius: 2,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    borderRadius: 2,
+  placeholder: {
+    width: 36,
   },
   scrollView: {
     flex: 1,
@@ -433,31 +376,38 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingBottom: 120,
   },
-  stepContainer: {
-    flex: 1,
+  mainHeader: {
+    marginBottom: 40,
+    alignItems: 'center',
   },
-  stepHeader: {
+  mainTitle: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: Colors.light.foreground,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  mainSubtitle: {
+    fontSize: 16,
+    color: Colors.light.mutedForeground,
+    lineHeight: 22,
+    textAlign: 'center',
+    paddingHorizontal: 20,
+  },
+  section: {
     marginBottom: 32,
   },
-  stepTitle: {
-    fontSize: 24,
+  sectionTitle: {
+    fontSize: 20,
     fontWeight: '700',
     color: Colors.light.foreground,
     marginBottom: 8,
   },
-  stepSubtitle: {
-    fontSize: 16,
-    color: Colors.light.mutedForeground,
-    lineHeight: 22,
-  },
-  inputSection: {
-    marginBottom: 24,
-  },
-  inputLabel: {
+  sectionSubtitle: {
     fontSize: 14,
-    fontWeight: '600',
-    color: Colors.light.foreground,
-    marginBottom: 8,
+    color: Colors.light.mutedForeground,
+    marginBottom: 20,
+    lineHeight: 20,
   },
   nameInput: {
     borderRadius: 12,
@@ -474,7 +424,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 16,
-    marginBottom: 32,
   },
   goalTile: {
     width: '47%',
@@ -519,15 +468,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  yearSection: {
-    marginBottom: 24,
-  },
-  yearLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: Colors.light.foreground,
-    marginBottom: 12,
   },
   yearScroll: {
     paddingHorizontal: 4,
@@ -580,7 +520,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: Colors.light.border + '30',
   },
-  continueButton: {
+  completeButton: {
     borderRadius: 12,
     shadowColor: Colors.light.primary,
     shadowOffset: { width: 0, height: 3 },
@@ -588,7 +528,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 6,
   },
-  continueButtonDisabled: {
+  completeButtonDisabled: {
     shadowOpacity: 0,
     elevation: 0,
   },
@@ -602,13 +542,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  continueButtonText: {
+  completeButtonText: {
     color: Colors.light.primaryForeground,
     fontSize: 16,
     fontWeight: '600',
     marginRight: 8,
   },
-  continueButtonTextDisabled: {
+  completeButtonTextDisabled: {
     color: Colors.light.mutedForeground,
   },
 });
