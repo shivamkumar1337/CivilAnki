@@ -55,7 +55,8 @@ async updateProfile(updates: {
   email?: string;
 }) {
   try {
-    const res = await axios.post(`${API_BASE}/profile/updateprofile`, { updates });
+    const res = await axios.post(`${API_BASE}/profile/updateprofile`, { updates});
+    console.log("Profile update response:", res.data);
     return res.data; // Adjust based on your backend's response
   } catch (error: any) {
     return { success: false, error: error.message };
