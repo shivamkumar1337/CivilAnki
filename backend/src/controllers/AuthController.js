@@ -4,126 +4,92 @@
  */
 
 const AuthService = require('../services/AuthService');
+const ProfileService = require('../services/ProfileService');
 
 class AuthController {
-  /**
-   * Send OTP for signup
-   * POST /auth/signup
-   */
-  static async sendSignupOTP(req, res) {
-    try {
-      const { phone, name } = req.body;
-
-      if (!phone || !name) {
-        return res.status(400).json({
-          success: false,
-          error: 'Phone number and name are required',
-          details: {
-            phone: !phone ? 'Phone number is required' : null,
-            name: !name ? 'Name is required' : null
-          }
-        });
-      }
-
-      const result = await AuthService.sendSignupOTP(phone, name);
-
-      return res.status(200).json({
-        success: true,
-        message: result.message,
-        data: result.data
-      });
-    } catch (error) {
-      console.error('Signup OTP controller error:', error);
-
-      return res.status(400).json({
-        success: false,
-        error: error.message
-      });
-    }
-  }
 
   /**
    * Send OTP for signin
-   * POST /auth/signin
+   * POST /auth/sendOTP
    */
-  static async sendSigninOTP(req, res) {
-    try {
-      const { phone } = req.body;
+static async sendOTP(req, res) {
+  try {
+    const { phone } = req.body;
 
-      if (!phone) {
-        return res.status(400).json({
-          success: false,
-          error: 'Phone number is required'
-        });
-      }
-
-      const result = await AuthService.sendSigninOTP(phone);
-
-      return res.status(200).json({
-        success: true,
-        message: result.message,
-        data: result.data
-      });
-    } catch (error) {
-      console.error('Signin OTP controller error:', error);
-
-      const statusCode = error.message.includes('not found') ? 404 : 400;
-
-      return res.status(statusCode).json({
+    if (!phone) {
+      return res.status(400).json({
         success: false,
-        error: error.message
+        error: 'Phone number is required'
       });
     }
+
+    // Check if user exists using the service
+
+    // Send OTP regardless of whether user existed or was just created
+    const result = await AuthService.sendOTP(phone);
+
+    return res.status(200).json({
+      success: true,
+      message: result.message,
+    });
+  } catch (error) {
+    console.error('Signin OTP controller error:', error);
+
+    const statusCode = error.message.includes('not found') ? 404 : 400;
+
+    return res.status(statusCode).json({
+      success: false,
+      error: error.message
+    });
   }
+}
+
 
   /**
    * Verify OTP and complete authentication
    * POST /auth/verify-otp
    */
-  static async verifyOTP(req, res) {
-    try {
-      const { phone, token, isSignUp, userData } = req.body;
+ static async verifyOTP(req, res) {
+  try {
+    const { phone, token } = req.body;
 
-      if (!phone || !token) {
-        return res.status(400).json({
-          success: false,
-          error: 'Phone number and OTP token are required',
-          details: {
-            phone: !phone ? 'Phone number is required' : null,
-            token: !token ? 'OTP token is required' : null
-          }
-        });
-      }
-
-      if (isSignUp && (!userData || !userData.name)) {
-        return res.status(400).json({
-          success: false,
-          error: 'Name is required for signup',
-          details: {
-            'userData.name': 'Name is required for signup'
-          }
-        });
-      }
-
-      const result = await AuthService.verifyOTP(phone, token, isSignUp, userData || {});
-
-      return res.status(200).json({
-        success: true,
-        message: result.message,
-        user: result.user,
-        session: result.session,
-        profile: result.profile
-      });
-    } catch (error) {
-      console.error('OTP verification controller error:', error);
-
-      return res.status(400).json({
-        success: false,
-        error: error.message
-      });
+    if (!phone || !token) {
+      // ...existing validation...
     }
-  }
 
+    // 1. Verify OTP
+    const result = await AuthService.verifyOTP(phone, token);
+
+    // 2. Check if user exists, create profile if not
+    const userCheck = await AuthService.checkUserExists(phone, 'phone');
+    let userProfile = userCheck.profile;
+
+    if (!userCheck.exists) {
+      try {
+        const { id } = result.session.user;
+        const newProfile = await ProfileService.createProfile({ phone, status: 0,id });
+        userProfile = newProfile;
+        console.log('New user profile created:', userProfile.id);
+      } catch (createError) {
+        console.error('Error creating user profile:', createError);
+        return res.status(500).json({
+          success: false,
+          error: 'Failed to create user profile'
+        });
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: result.message,
+      user: result.user,
+      session: result.session,
+      profile: userProfile
+    });
+  } catch (error) {
+    // ...existing error handling...
+  }
+}
   /**
    * Sign out user
    * POST /auth/signout
@@ -155,30 +121,35 @@ class AuthController {
    * Check if user exists by phone
    * POST /auth/check-user
    */
-  static async checkUserExists(req, res) {
+static async checkUserExists(req, res) {
     try {
-      const { phone } = req.body;
+      const { authType, credential } = req.body;
 
-      if (!phone) {
+      // Basic validatiot
+      if (!authType || !['phone', 'email'].includes(authType)) {
         return res.status(400).json({
           success: false,
-          error: 'Phone number is required'
+          error: 'Valid authType (phone/email) is required'
+        });
+      }
+      
+      if (!credential) {
+        return res.status(400).json({
+          success: false,
+          error: `${authType} is required`
         });
       }
 
-      const result = await AuthService.checkUserExists(phone);
+      const result = await AuthService.checkUserExists(credential, authType);
 
       return res.status(200).json({
         success: true,
-        message: 'User existence check completed',
         data: {
           exists: result.exists,
-          hasProfile: !!result.profile
+          profile: result.profile
         }
       });
     } catch (error) {
-      console.error('Check user exists controller error:', error);
-
       return res.status(400).json({
         success: false,
         error: error.message

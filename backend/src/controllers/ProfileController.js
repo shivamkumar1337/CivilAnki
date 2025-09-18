@@ -6,6 +6,14 @@
 const ProfileService = require('../services/ProfileService');
 
 class ProfileController {
+  //create profile
+  static async  createProfile({ phone, status = 0, }) {
+    const id = user.id;
+  const { data, error } = await ProfileService.createProfile({ phone, status,id });
+  if (error) throw new Error(`Failed to create user profile: ${error.message}`);
+  return data;
+}
+
   /**
    * Get current user profile
    * GET /profile
@@ -46,16 +54,8 @@ class ProfileController {
    */
   static async updateProfile(req, res) {
     try {
-      const userId = req.user?.id;
-      const updates = req.body;
-      
-      if (!userId) {
-        return res.status(401).json({
-          success: false,
-          error: 'User ID not found in request'
-        });
-      }
-
+     const  {updates} = req.body;
+      const id = req.user?.id;
       if (!updates || Object.keys(updates).length === 0) {
         return res.status(400).json({
           success: false,
@@ -63,7 +63,7 @@ class ProfileController {
         });
       }
 
-      const profile = await ProfileService.updateProfile(userId, updates);
+      const profile = await ProfileService.updateProfile( id,updates);
       
       return res.status(200).json({
         success: true,

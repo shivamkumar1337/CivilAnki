@@ -67,7 +67,7 @@ const authMiddleware = async (req, res, next) => {
         message: 'Please verify your account before accessing protected resources'
       });
     }
-
+    
     // Attach user information to request
     req.user = {
       id: user.id,

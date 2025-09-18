@@ -130,91 +130,34 @@ class ProfileService {
     }
   }
 
+
+
+  /**
+   * Create new profile
+   */
+  static async createProfile({ phone, status=0 ,id }) {
+  const { data, error } = await supabaseAnon
+    .from('profiles')
+    .insert({
+      phone,
+      status,
+      id
+    })
+    .select()
+    .single();
+  if (error) throw new Error(`Failed to create user profile: ${error.message}`);
+  return data;
+}
+
   /**
    * Update user profile
    */
-  static async updateProfile(userId, updates) {
+  static async updateProfile(id, updates) {
     try {
-      if (!userId) {
-        throw new Error('User ID is required');
-      }
-
-      // Remove fields that shouldn't be updated
-      const sanitizedUpdates = { ...updates };
-      delete sanitizedUpdates.id;
-      delete sanitizedUpdates.auth_user_id;
-      delete sanitizedUpdates.created_at;
-
-      if (Object.keys(sanitizedUpdates).length === 0) {
-        throw new Error('No valid fields to update');
-      }
-
-      // Validate name if provided
-      if (sanitizedUpdates.name !== undefined) {
-        if (sanitizedUpdates.name === null || sanitizedUpdates.name === '') {
-          throw new Error('Name cannot be empty');
-        }
-        const nameValidation = this.validateName(sanitizedUpdates.name);
-        if (!nameValidation.isValid) {
-          throw new Error(nameValidation.message);
-        }
-        sanitizedUpdates.name = nameValidation.cleaned;
-      }
-
-      // Validate email if provided
-      if (sanitizedUpdates.email !== undefined) {
-        if (sanitizedUpdates.email === null || sanitizedUpdates.email === '') {
-          sanitizedUpdates.email = null; // Allow clearing email
-        } else {
-          const emailValidation = this.validateEmail(sanitizedUpdates.email);
-          if (!emailValidation.isValid) {
-            throw new Error(emailValidation.message);
-          }
-          sanitizedUpdates.email = sanitizedUpdates.email.toLowerCase().trim();
-        }
-      }
-
-      // // Validate phone if provided
-      // if (sanitizedUpdates.phone !== undefined) {
-      //   if (sanitizedUpdates.phone === null || sanitizedUpdates.phone === '') {
-      //     sanitizedUpdates.phone = null; // Allow clearing phone
-      //   } else {
-      //     const phoneValidation = this.validateIndianPhone(sanitizedUpdates.phone);
-      //     if (!phoneValidation.isValid) {
-      //       throw new Error(phoneValidation.message);
-      //     }
-      //     // Convert to numeric format for database
-      //     sanitizedUpdates.phone = parseInt(phoneValidation.formatted.replace('+91', ''));
-      //   }
-      // }
-
-      // Validate avatar URL if provided
-      if (sanitizedUpdates.avatar_url !== undefined) {
-        if (sanitizedUpdates.avatar_url === null || sanitizedUpdates.avatar_url === '') {
-          sanitizedUpdates.avatar_url = null; // Allow clearing avatar
-        } else {
-          const urlValidation = this.validateURL(sanitizedUpdates.avatar_url);
-          if (!urlValidation.isValid) {
-            throw new Error(urlValidation.message);
-          }
-        }
-      }
-
-      // Validate streak if provided
-      if (sanitizedUpdates.streak !== undefined) {
-        if (typeof sanitizedUpdates.streak !== 'number' || sanitizedUpdates.streak < 0) {
-          throw new Error('Streak must be a non-negative number');
-        }
-      }
-
-      // Add updated timestamp
-      // sanitizedUpdates.updated_at = new Date().toISOString();
-
-      // Update profile
       const { data: profile, error } = await supabaseAnon
         .from('profiles')
-        .update(sanitizedUpdates)
-        .eq('auth_user_id', userId)
+        .update(updates)
+        .eq('id', id)
         .select()
         .single();
 
@@ -226,81 +169,6 @@ class ProfileService {
       return profile;
     } catch (error) {
       console.error('Update profile error:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Create new profile
-   */
-  static async createProfile(userId, profileData) {
-    try {
-      if (!userId) {
-        throw new Error('User ID is required');
-      }
-
-      if (!profileData.name) {
-        throw new Error('Name is required');
-      }
-
-      // Validate name
-      const nameValidation = this.validateName(profileData.name);
-      if (!nameValidation.isValid) {
-        throw new Error(nameValidation.message);
-      }
-
-      // Validate email if provided
-      if (profileData.email) {
-        const emailValidation = this.validateEmail(profileData.email);
-        if (!emailValidation.isValid) {
-          throw new Error(emailValidation.message);
-        }
-      }
-
-      // Validate phone if provided
-      let phoneNumeric = null;
-      if (profileData.phone) {
-        const phoneValidation = this.validateIndianPhone(profileData.phone);
-        if (!phoneValidation.isValid) {
-          throw new Error(phoneValidation.message);
-        }
-        phoneNumeric = parseInt(phoneValidation.formatted.replace('+91', ''));
-      }
-
-      // Validate avatar URL if provided
-      if (profileData.avatar_url) {
-        const urlValidation = this.validateURL(profileData.avatar_url);
-        if (!urlValidation.isValid) {
-          throw new Error(urlValidation.message);
-        }
-      }
-
-      // Create profile
-      const newProfile = {
-        auth_user_id: userId,
-        name: nameValidation.cleaned,
-        email: profileData.email ? profileData.email.toLowerCase().trim() : null,
-        phone: phoneNumeric,
-        streak: 0,
-        avatar_url: profileData.avatar_url || null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-
-      const { data: profile, error } = await supabaseAnon
-        .from('profiles')
-        .insert([newProfile])
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Create profile error:', error);
-        throw new Error(error.message);
-      }
-
-      return profile;
-    } catch (error) {
-      console.error('Create profile error:', error);
       throw error;
     }
   }

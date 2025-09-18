@@ -9,7 +9,7 @@ const router = express.Router();
 
 // User profile routes (protected)
 router.get('/getprofile', authMiddleware, ProfileController.getProfile);
-router.put('/updateprofile', authMiddleware, ProfileController.updateProfile);
-router.put('/streak', authMiddleware, ProfileController.updateStreak);
+router.post('/updateprofile',authMiddleware, ProfileController.updateProfile);
+router.put('/createprofile', authMiddleware, ProfileController.createProfile);
 
 module.exports = router;
