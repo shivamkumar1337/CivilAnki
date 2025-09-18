@@ -1,5 +1,15 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, StyleSheet, StatusBar, ScrollView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { 
+  View, 
+  Text, 
+  TextInput, 
+  TouchableOpacity, 
+  KeyboardAvoidingView, 
+  Platform, 
+  StyleSheet, 
+  StatusBar, 
+  ScrollView 
+} from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/Colors';
@@ -11,79 +21,107 @@ import { AuthStackParamList } from '../../navigation/types';
 import { LoadingSpinner } from '../common/LoadingSpinner';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-type MobileAuthProps = {
-  onSubmit: (mobile: string, isValid: boolean) => {sendSMSOTP: any};
-  onBack: () => void;
-};
-
-type AuthOptionsNavigationProp = StackNavigationProp<AuthStackParamList, 'AuthOptions'>;
+type MobileAuthNavigationProp = StackNavigationProp<AuthStackParamList, 'MobileAuth'>;
 
 export function MobileAuth() {
-  const [isLogin, setIsLogin] = useState(true);
   const [mobile, setMobile] = useState('');
-  const [name, setName] = useState('');
   const [isValid, setIsValid] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const navigation = useNavigation<AuthOptionsNavigationProp>();
+  const navigation = useNavigation<MobileAuthNavigationProp>();
   const dispatch = useDispatch();
 
-  const handleSubmit = () => {
-    navigation.navigate('OTPVerification', { 
-      mobile: `+91${mobile}`, 
-      isLogin: isLogin,
-      name: name 
-    });
-  };
+  // Debug logging whenever state changes
+  useEffect(() => {
+    console.log('State update:', { mobile, isValid, mobileLength: mobile.length });
+  }, [mobile, isValid]);
 
   const handleMobileChange = (value: string) => {
+    console.log('handleMobileChange called with:', value);
+    
+    // Remove non-digits and limit to 10
     const digits = value.replace(/\D/g, '').slice(0, 10);
+    console.log('Cleaned digits:', digits);
+    
     setMobile(digits);
-    validateForm(digits, name);
+    
+    // Validate immediately
+    const isValidNumber = validateForm(digits);
+    console.log('Validation result:', isValidNumber);
+    
+    // Clear error when user starts typing
+    if (error) setError('');
   };
 
-  const handleNameChange = (value: string) => {
-    setName(value);
-    validateForm(mobile, value);
-  };
-
-  const validateForm = (mobileValue: string, nameValue: string) => {
+  const validateForm = (mobileValue: string) => {
+    console.log('validateForm called with:', mobileValue);
+    
     const isMobileValid = mobileValue.length === 10 && ['6','7','8','9'].includes(mobileValue[0]);
-    const isNameValid = isLogin || nameValue.trim().length >= 2;
-    setIsValid(isMobileValid && isNameValid);
+    console.log('Validation details:', {
+      length: mobileValue.length,
+      lengthValid: mobileValue.length === 10,
+      firstDigit: mobileValue[0],
+      firstDigitValid: ['6','7','8','9'].includes(mobileValue[0]),
+      finalResult: isMobileValid
+    });
+    
+    setIsValid(isMobileValid);
+    return isMobileValid;
   };
 
   const handleContinue = async () => {
-    if (!isValid || isLoading) return;
+    // console.log('handleContinue called. isValid:', isValid, 'isLoading:', isLoading);
+    
+    // if (!isValid || isLoading) {
+    //   console.log('Button disabled - validation or loading issue');
+    //   return;
+    // }
     
     try {
       setIsLoading(true);
       setError('');
       
-      const result = await authService.sendOTP(`+91${mobile}`);
+      const fullMobile = `+91${mobile}`;
+      console.log('Processing mobile:', fullMobile);
+      
+      // // First, check if user exists in profiles table
+      // console.log("Checking if user exists for mobile:", fullMobile);
+      // const { data: profileData, error: checkError } = await authService.checkUserExists(fullMobile);
+      
+      // const userExists = !!profileData;
+      // console.log("User exists check result:", { userExists, profileData });
+      
+      // Send OTP regardless of user existence
+      console.log("Sending OTP to:", fullMobile);
+      const result = await authService.sendOTP(fullMobile);
       
       if (result.success) {
-        handleSubmit();
+        console.log("OTP sent successfully, navigating to verification");
+        navigation.navigate('OTPVerification', { 
+          mobile: fullMobile, 
+          // isLogin: userExists,
+          isLogin: true,
+          name: undefined,
+        });
       } else {
+        console.log("Failed to send OTP:", result.error);
         setError(result.error || 'Failed to send OTP. Please try again.');
       }
-    } catch (error) {
-      setError('SMS service unavailable. Please try again later.');
+    } catch (error: any) {
+      console.log("Error in handleContinue:", error);
+      setError('Something went wrong. Please try again later.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const toggleMode = () => {
-    setIsLogin(!isLogin);
-    setError('');
-    setName('');
-    validateForm(mobile, '');
-  };
+  // Debug: Log button state
+  const buttonDisabled = !isValid || isLoading;
+  console.log('Button state:', { isValid, isLoading, buttonDisabled });
 
   return (
-      <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={Colors.light.background} />
       
       {/* Header */}
@@ -91,7 +129,7 @@ export function MobileAuth() {
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={22} color={Colors.light.foreground} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{isLogin ? 'Welcome Back' : 'Create Account'}</Text>
+        <Text style={styles.headerTitle}>Mobile Number</Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -106,34 +144,16 @@ export function MobileAuth() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Toggle Section */}
-          <View style={styles.toggleSection}>
-            <View style={styles.toggleContainer}>
-              <TouchableOpacity 
-                style={[styles.toggleButton, isLogin && styles.toggleButtonActive]}
-                onPress={() => setIsLogin(true)}
-              >
-                <Text style={[styles.toggleText, isLogin && styles.toggleTextActive]}>Login</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={[styles.toggleButton, !isLogin && styles.toggleButtonActive]}
-                onPress={() => setIsLogin(false)}
-              >
-                <Text style={[styles.toggleText, !isLogin && styles.toggleTextActive]}>Sign Up</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
 
           {/* Logo Section */}
           <View style={styles.logoSection}>
-            <LinearGradient
+            {/* <LinearGradient
               colors={[Colors.light.primary + '20', Colors.light.primary + '10']}
               style={styles.logoBox}
             >
               <Ionicons name="phone-portrait" size={28} color={Colors.light.primary} />
-            </LinearGradient>
+            </LinearGradient> */}
             <Text style={styles.title}>Enter your mobile number</Text>
-            <Text style={styles.subtitle}>We'll send you a verification code</Text>
           </View>
 
           {/* Error Display */}
@@ -144,32 +164,14 @@ export function MobileAuth() {
             </View>
           ) : null}
 
-          {/* Input Section */}
+          {/* Mobile Input Section */}
           <View style={styles.inputSection}>
-            {/* Name Input (only for signup) */}
-            {!isLogin && (
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Full Name</Text>
-                <View style={styles.inputContainer}>
-                  <View style={styles.inputIconContainer}>
-                    <Ionicons name="person" size={18} color={Colors.light.mutedForeground} />
-                  </View>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Enter your full name"
-                    value={name}
-                    onChangeText={handleNameChange}
-                    placeholderTextColor={Colors.light.mutedForeground}
-                    autoCapitalize="words"
-                  />
-                </View>
-              </View>
-            )}
-
-            {/* Mobile Input */}
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>Mobile Number</Text>
-              <View style={styles.inputContainer}>
+              <View style={[
+                styles.inputContainer,
+                isValid && styles.inputContainerValid
+              ]}>
                 <View style={styles.countryCodeContainer}>
                   <Text style={styles.countryCode}>🇮🇳 +91</Text>
                 </View>
@@ -181,7 +183,14 @@ export function MobileAuth() {
                   onChangeText={handleMobileChange}
                   maxLength={10}
                   placeholderTextColor={Colors.light.mutedForeground}
+                  editable={!isLoading}
+                  autoFocus
                 />
+                {isValid && (
+                  <View style={styles.validIcon}>
+                    <Ionicons name="checkmark-circle" size={20} color={Colors.light.success} />
+                  </View>
+                )}
               </View>
             </View>
           </View>
@@ -193,26 +202,31 @@ export function MobileAuth() {
         {/* Continue Button - Fixed at bottom */}
         <View style={styles.bottomSection}>
           <TouchableOpacity
-            style={[styles.continueButton, !isValid && styles.continueButtonDisabled]}
-            disabled={!isValid || isLoading}
+            style={[
+              styles.continueButton, 
+              buttonDisabled && styles.continueButtonDisabled
+            ]}
+            disabled={buttonDisabled}
             onPress={handleContinue}
             activeOpacity={0.9}
           >
             <LinearGradient
-              colors={isValid ? [Colors.light.primary, '#1D4ED8'] : [Colors.light.muted, Colors.light.muted]}
+              colors={isValid && !isLoading ? [Colors.light.primary, '#1D4ED8'] : [Colors.light.muted, Colors.light.muted]}
               style={styles.buttonGradient}
             >
               <View style={styles.buttonContent}>
                 {isLoading ? (
                   <>
                     <LoadingSpinner size={'small'} color={Colors.light.background}/>
-                    {/* <Ionicons name="hourglass" size={18} color={Colors.light.primaryForeground} /> */}
-                    {/* <Text style={styles.continueText}>Sending OTP...</Text> */}
+                    <Text style={styles.loadingText}>Sending OTP...</Text>
                   </>
                 ) : (
                   <>
-                    <Text style={[styles.continueText, !isValid && styles.continueTextDisabled]}>
-                      Continue
+                    <Text style={[
+                      styles.continueText, 
+                      buttonDisabled && styles.continueTextDisabled
+                    ]}>
+                      Login / Sign Up
                     </Text>
                     <Ionicons 
                       name="arrow-forward" 
@@ -224,6 +238,12 @@ export function MobileAuth() {
               </View>
             </LinearGradient>
           </TouchableOpacity>
+          
+          <Text style={styles.privacyText}>
+            By continuing, you agree to our{' '}
+            <Text style={styles.linkText}>Terms of Service</Text> and{' '}
+            <Text style={styles.linkText}>Privacy Policy</Text>
+          </Text>
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -234,6 +254,18 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.light.background,
+  },
+  // Debug styles - Remove in production
+  debugContainer: {
+    backgroundColor: '#f0f0f0',
+    padding: 10,
+    marginBottom: 10,
+    borderRadius: 5,
+  },
+  debugText: {
+    fontSize: 12,
+    color: '#666',
+    fontFamily: 'monospace',
   },
   header: {
     flexDirection: 'row',
@@ -267,41 +299,10 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingHorizontal: 24,
   },
-  toggleSection: {
-    marginBottom: 32,
-  },
-  toggleContainer: {
-    flexDirection: 'row',
-    backgroundColor: Colors.light.secondary,
-    borderRadius: 12,
-    padding: 4,
-  },
-  toggleButton: {
-    flex: 1,
-    paddingVertical: 10,
-    alignItems: 'center',
-    borderRadius: 8,
-  },
-  toggleButtonActive: {
-    backgroundColor: Colors.light.background,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  toggleText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: Colors.light.mutedForeground,
-  },
-  toggleTextActive: {
-    color: Colors.light.foreground,
-    fontWeight: '600',
-  },
   logoSection: {
     alignItems: 'center',
     marginBottom: 32,
+    marginTop: 20,
   },
   logoBox: {
     width: 60,
@@ -312,16 +313,17 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   title: {
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: '700',
     color: Colors.light.foreground,
     marginBottom: 6,
     textAlign: 'center',
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: 15,
     color: Colors.light.mutedForeground,
     textAlign: 'center',
+    lineHeight: 20,
   },
   errorContainer: {
     flexDirection: 'row',
@@ -341,7 +343,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   inputSection: {
-    marginBottom: 24,
+    marginBottom: 32,
   },
   inputGroup: {
     marginBottom: 20,
@@ -361,12 +363,8 @@ const styles = StyleSheet.create({
     borderColor: Colors.light.border,
     overflow: 'hidden',
   },
-  inputIconContainer: {
-    paddingHorizontal: 14,
-    paddingVertical: 16,
-    backgroundColor: Colors.light.secondary,
-    borderRightWidth: 1,
-    borderRightColor: Colors.light.border,
+  inputContainerValid: {
+    borderColor: Colors.light.success,
   },
   countryCodeContainer: {
     paddingHorizontal: 14,
@@ -391,6 +389,31 @@ const styles = StyleSheet.create({
   mobileInput: {
     letterSpacing: 1,
   },
+  validIcon: {
+    paddingRight: 12,
+  },
+  featuresSection: {
+    marginBottom: 20,
+  },
+  featuresTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.light.foreground,
+    marginBottom: 12,
+  },
+  featuresList: {
+    gap: 10,
+  },
+  featureItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  featureText: {
+    fontSize: 14,
+    color: Colors.light.mutedForeground,
+    flex: 1,
+  },
   spacer: {
     flex: 1,
     minHeight: 40,
@@ -405,6 +428,7 @@ const styles = StyleSheet.create({
   },
   continueButton: {
     borderRadius: 12,
+    marginBottom: 16,
     shadowColor: Colors.light.primary,
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.2,
@@ -433,5 +457,21 @@ const styles = StyleSheet.create({
   },
   continueTextDisabled: {
     color: Colors.light.mutedForeground,
+  },
+  loadingText: {
+    color: Colors.light.primaryForeground,
+    fontSize: 14,
+    fontWeight: '500',
+    marginLeft: 8,
+  },
+  privacyText: {
+    fontSize: 12,
+    color: Colors.light.mutedForeground,
+    textAlign: 'center',
+    lineHeight: 16,
+  },
+  linkText: {
+    color: Colors.light.primary,
+    fontWeight: '500',
   },
 });

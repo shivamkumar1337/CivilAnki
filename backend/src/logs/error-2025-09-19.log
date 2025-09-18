@@ -1,0 +1,180 @@
+[2025-09-19 00:02:37] [31merror[39m: [31mUncaught Exception:[39m {
+  "error": "supabaseKey is required.",
+  "fatal": true
+}
+Error: supabaseKey is required.
+    at new SupabaseClient (D:\Anki-upsc\temp\CivilAnki\backend\node_modules\@supabase\supabase-js\dist\main\SupabaseClient.js:46:19)
+    at createClient (D:\Anki-upsc\temp\CivilAnki\backend\node_modules\@supabase\supabase-js\dist\main\index.js:38:12)
+    at Object.<anonymous> (D:\Anki-upsc\temp\CivilAnki\backend\src\config\database.js:63:23)
+    at Module._compile (node:internal/modules/cjs/loader:1554:14)
+    at Object..js (node:internal/modules/cjs/loader:1706:10)
+    at Module.load (node:internal/modules/cjs/loader:1289:32)
+    at Function._load (node:internal/modules/cjs/loader:1108:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:220:24)
+    at Module.require (node:internal/modules/cjs/loader:1311:12)
+[2025-09-19 00:03:12] [31merror[39m: [31mUncaught Exception:[39m {
+  "error": "supabaseKey is required.",
+  "fatal": true
+}
+Error: supabaseKey is required.
+    at new SupabaseClient (D:\Anki-upsc\temp\CivilAnki\backend\node_modules\@supabase\supabase-js\dist\main\SupabaseClient.js:46:19)
+    at createClient (D:\Anki-upsc\temp\CivilAnki\backend\node_modules\@supabase\supabase-js\dist\main\index.js:38:12)
+    at Object.<anonymous> (D:\Anki-upsc\temp\CivilAnki\backend\src\config\database.js:63:23)
+    at Module._compile (node:internal/modules/cjs/loader:1554:14)
+    at Object..js (node:internal/modules/cjs/loader:1706:10)
+    at Module.load (node:internal/modules/cjs/loader:1289:32)
+    at Function._load (node:internal/modules/cjs/loader:1108:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:220:24)
+    at Module.require (node:internal/modules/cjs/loader:1311:12)
+[2025-09-19 00:03:12] [31merror[39m: [31mUncaught Exception:[39m {
+  "error": "supabaseKey is required.",
+  "fatal": true
+}
+Error: supabaseKey is required.
+    at new SupabaseClient (D:\Anki-upsc\temp\CivilAnki\backend\node_modules\@supabase\supabase-js\dist\main\SupabaseClient.js:46:19)
+    at createClient (D:\Anki-upsc\temp\CivilAnki\backend\node_modules\@supabase\supabase-js\dist\main\index.js:38:12)
+    at Object.<anonymous> (D:\Anki-upsc\temp\CivilAnki\backend\src\config\database.js:63:23)
+    at Module._compile (node:internal/modules/cjs/loader:1554:14)
+    at Object..js (node:internal/modules/cjs/loader:1706:10)
+    at Module.load (node:internal/modules/cjs/loader:1289:32)
+    at Function._load (node:internal/modules/cjs/loader:1108:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:220:24)
+    at Module.require (node:internal/modules/cjs/loader:1311:12)
+[2025-09-19 00:04:56] [31merror[39m: [31mUncaught Exception:[39m {
+  "error": "supabaseKey is required.",
+  "fatal": true
+}
+Error: supabaseKey is required.
+    at new SupabaseClient (D:\Anki-upsc\temp\CivilAnki\backend\node_modules\@supabase\supabase-js\dist\main\SupabaseClient.js:46:19)
+    at createClient (D:\Anki-upsc\temp\CivilAnki\backend\node_modules\@supabase\supabase-js\dist\main\index.js:38:12)
+    at Object.<anonymous> (D:\Anki-upsc\temp\CivilAnki\backend\src\config\database.js:63:23)
+    at Module._compile (node:internal/modules/cjs/loader:1554:14)
+    at Object..js (node:internal/modules/cjs/loader:1706:10)
+    at Module.load (node:internal/modules/cjs/loader:1289:32)
+    at Function._load (node:internal/modules/cjs/loader:1108:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:220:24)
+    at Module.require (node:internal/modules/cjs/loader:1311:12)
+[2025-09-19 00:05:25] [31merror[39m: [31mUncaught Exception:[39m {
+  "error": "supabaseKey is required.",
+  "fatal": true
+}
+Error: supabaseKey is required.
+    at new SupabaseClient (D:\Anki-upsc\temp\CivilAnki\backend\node_modules\@supabase\supabase-js\dist\main\SupabaseClient.js:46:19)
+    at createClient (D:\Anki-upsc\temp\CivilAnki\backend\node_modules\@supabase\supabase-js\dist\main\index.js:38:12)
+    at Object.<anonymous> (D:\Anki-upsc\temp\CivilAnki\backend\src\config\database.js:63:23)
+    at Module._compile (node:internal/modules/cjs/loader:1554:14)
+    at Object..js (node:internal/modules/cjs/loader:1706:10)
+    at Module.load (node:internal/modules/cjs/loader:1289:32)
+    at Function._load (node:internal/modules/cjs/loader:1108:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:220:24)
+    at Module.require (node:internal/modules/cjs/loader:1311:12)
+[2025-09-19 00:05:37] [31merror[39m: [31mUncaught Exception:[39m {
+  "error": "supabaseKey is required.",
+  "fatal": true
+}
+Error: supabaseKey is required.
+    at new SupabaseClient (D:\Anki-upsc\temp\CivilAnki\backend\node_modules\@supabase\supabase-js\dist\main\SupabaseClient.js:46:19)
+    at createClient (D:\Anki-upsc\temp\CivilAnki\backend\node_modules\@supabase\supabase-js\dist\main\index.js:38:12)
+    at Object.<anonymous> (D:\Anki-upsc\temp\CivilAnki\backend\src\config\database.js:63:23)
+    at Module._compile (node:internal/modules/cjs/loader:1554:14)
+    at Object..js (node:internal/modules/cjs/loader:1706:10)
+    at Module.load (node:internal/modules/cjs/loader:1289:32)
+    at Function._load (node:internal/modules/cjs/loader:1108:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:220:24)
+    at Module.require (node:internal/modules/cjs/loader:1311:12)
+[2025-09-19 00:06:37] [31merror[39m: [31mUncaught Exception:[39m {
+  "error": "supabaseKey is required.",
+  "fatal": true
+}
+Error: supabaseKey is required.
+    at new SupabaseClient (D:\Anki-upsc\temp\CivilAnki\backend\node_modules\@supabase\supabase-js\dist\main\SupabaseClient.js:46:19)
+    at createClient (D:\Anki-upsc\temp\CivilAnki\backend\node_modules\@supabase\supabase-js\dist\main\index.js:38:12)
+    at Object.<anonymous> (D:\Anki-upsc\temp\CivilAnki\backend\src\config\database.js:63:23)
+    at Module._compile (node:internal/modules/cjs/loader:1554:14)
+    at Object..js (node:internal/modules/cjs/loader:1706:10)
+    at Module.load (node:internal/modules/cjs/loader:1289:32)
+    at Function._load (node:internal/modules/cjs/loader:1108:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:220:24)
+    at Module.require (node:internal/modules/cjs/loader:1311:12)
+[2025-09-19 00:06:47] [31merror[39m: [31mUncaught Exception:[39m {
+  "error": "supabaseKey is required.",
+  "fatal": true
+}
+Error: supabaseKey is required.
+    at new SupabaseClient (D:\Anki-upsc\temp\CivilAnki\backend\node_modules\@supabase\supabase-js\dist\main\SupabaseClient.js:46:19)
+    at createClient (D:\Anki-upsc\temp\CivilAnki\backend\node_modules\@supabase\supabase-js\dist\main\index.js:38:12)
+    at Object.<anonymous> (D:\Anki-upsc\temp\CivilAnki\backend\src\config\database.js:63:23)
+    at Module._compile (node:internal/modules/cjs/loader:1554:14)
+    at Object..js (node:internal/modules/cjs/loader:1706:10)
+    at Module.load (node:internal/modules/cjs/loader:1289:32)
+    at Function._load (node:internal/modules/cjs/loader:1108:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:220:24)
+    at Module.require (node:internal/modules/cjs/loader:1311:12)
+[2025-09-19 00:07:35] [31merror[39m: [31mUncaught Exception:[39m {
+  "error": "supabaseKey is required.",
+  "fatal": true
+}
+Error: supabaseKey is required.
+    at new SupabaseClient (D:\Anki-upsc\temp\CivilAnki\backend\node_modules\@supabase\supabase-js\dist\main\SupabaseClient.js:46:19)
+    at createClient (D:\Anki-upsc\temp\CivilAnki\backend\node_modules\@supabase\supabase-js\dist\main\index.js:38:12)
+    at Object.<anonymous> (D:\Anki-upsc\temp\CivilAnki\backend\src\config\database.js:63:23)
+    at Module._compile (node:internal/modules/cjs/loader:1554:14)
+    at Object..js (node:internal/modules/cjs/loader:1706:10)
+    at Module.load (node:internal/modules/cjs/loader:1289:32)
+    at Function._load (node:internal/modules/cjs/loader:1108:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:220:24)
+    at Module.require (node:internal/modules/cjs/loader:1311:12)
+[2025-09-19 00:07:43] [31merror[39m: [31mUncaught Exception:[39m {
+  "error": "supabaseKey is required.",
+  "fatal": true
+}
+Error: supabaseKey is required.
+    at new SupabaseClient (D:\Anki-upsc\temp\CivilAnki\backend\node_modules\@supabase\supabase-js\dist\main\SupabaseClient.js:46:19)
+    at createClient (D:\Anki-upsc\temp\CivilAnki\backend\node_modules\@supabase\supabase-js\dist\main\index.js:38:12)
+    at Object.<anonymous> (D:\Anki-upsc\temp\CivilAnki\backend\src\config\database.js:63:23)
+    at Module._compile (node:internal/modules/cjs/loader:1554:14)
+    at Object..js (node:internal/modules/cjs/loader:1706:10)
+    at Module.load (node:internal/modules/cjs/loader:1289:32)
+    at Function._load (node:internal/modules/cjs/loader:1108:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:220:24)
+    at Module.require (node:internal/modules/cjs/loader:1311:12)
+[2025-09-19 00:08:24] [31merror[39m: [31mUncaught Exception:[39m {
+  "error": "supabaseKey is required.",
+  "fatal": true
+}
+Error: supabaseKey is required.
+    at new SupabaseClient (D:\Anki-upsc\temp\CivilAnki\backend\node_modules\@supabase\supabase-js\dist\main\SupabaseClient.js:46:19)
+    at createClient (D:\Anki-upsc\temp\CivilAnki\backend\node_modules\@supabase\supabase-js\dist\main\index.js:38:12)
+    at Object.<anonymous> (D:\Anki-upsc\temp\CivilAnki\backend\src\config\database.js:63:23)
+    at Module._compile (node:internal/modules/cjs/loader:1554:14)
+    at Object..js (node:internal/modules/cjs/loader:1706:10)
+    at Module.load (node:internal/modules/cjs/loader:1289:32)
+    at Function._load (node:internal/modules/cjs/loader:1108:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:220:24)
+    at Module.require (node:internal/modules/cjs/loader:1311:12)
+[2025-09-19 00:08:39] [31merror[39m: [31mUncaught Exception:[39m {
+  "error": "supabaseKey is required.",
+  "fatal": true
+}
+Error: supabaseKey is required.
+    at new SupabaseClient (D:\Anki-upsc\temp\CivilAnki\backend\node_modules\@supabase\supabase-js\dist\main\SupabaseClient.js:46:19)
+    at createClient (D:\Anki-upsc\temp\CivilAnki\backend\node_modules\@supabase\supabase-js\dist\main\index.js:38:12)
+    at Object.<anonymous> (D:\Anki-upsc\temp\CivilAnki\backend\src\config\database.js:63:23)
+    at Module._compile (node:internal/modules/cjs/loader:1554:14)
+    at Object..js (node:internal/modules/cjs/loader:1706:10)
+    at Module.load (node:internal/modules/cjs/loader:1289:32)
+    at Function._load (node:internal/modules/cjs/loader:1108:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:220:24)
+    at Module.require (node:internal/modules/cjs/loader:1311:12)

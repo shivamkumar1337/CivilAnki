@@ -22,7 +22,7 @@ export function OTPVerification() {
   const dispatch = useDispatch();
   
   const { mobile: routeMobile, isLogin, name } = route.params;
-  
+
   const [mobile, setMobile] = useState(routeMobile || '');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
@@ -50,53 +50,66 @@ export function OTPVerification() {
     };
   }, []);
 
-  const handleVerify = async () => {
-    const otpString = otp.join('');
-    if (otpString.length !== 6) return;
-    
-    // Dismiss keyboard before verification
-    Keyboard.dismiss();
-    
-    setLoading(true);
-    setError('');
-    
-    try {
-      const { success, data, error } = await authService.verifyOTP(mobile, otpString);
-      if (!success) throw new Error(error);
-      
-      // Update user data in Redux
-      const userData = data?.user;
+// In your existing OTPVerification.tsx file, update the handleVerify function:
+const handleVerify = async () => {
+  const otpString = otp.join('');
+  if (otpString.length !== 6) return;
 
-      const userDataStore  = {
-        id: userData?.id ,
+  Keyboard.dismiss();
+  setLoading(true);
+  setError('');
+
+  try {
+    const { success, data, error } = await authService.verifyOTP(mobile, otpString);
+    if (!success) throw new Error(error);
+
+    const userData = data?.user;
+    
+    if (isLogin) {
+      // Existing user - get their profile and complete authentication
+      const { data: profileData } = await authService.getUserProfile(userData?.id);
+      
+      const userDataStore = {
+        id: userData?.id,
         mobile: mobile,
+        name: profileData?.name || '',
+        goal: profileData?.goal || '',
+        target_year: profileData?.target_year || new Date().getFullYear(),
         email: userData?.email || '',
         isAuthenticated: true,
-        // ensure session is undefined instead of null so it matches Partial<User> type
         session: data?.session ?? undefined,
+        onboarding_completed: profileData?.onboarding_completed || false,
       };
-      
-      // Set user data first
+
       dispatch(setUser(userDataStore));
-      // Save session to Redux and AsyncStorage
-      dispatch(setSession(data?.session));
-      // Then set authenticated status
       dispatch(setAuthenticated(true));
-      
       setIsSuccess(true);
       
-      // After showing success screen, the AppNavigator will automatically 
-      // switch to MainNavigator due to Redux state change
-      setTimeout(() => {
-        // The navigation will happen automatically due to Redux state change
-        // No manual navigation needed here
-      }, 1500);
+      // Navigation will be handled by Redux state change to home/main app
+    } else {
+
+      setIsSuccess(true);
       
-    } catch (err) {
-      setError('Invalid OTP. Please try again.');
+      // Navigate to UserOnboarding after success animation
+      setTimeout(() => {
+        // Ensure userId is present before navigating (navigation types require a string)
+        if (!userData?.id) {
+          setError('Missing user id. Please try again.');
+          return;
+        }
+        navigation.navigate('UserOnboarding', {
+          userId: userData.id,
+          mobile: mobile,
+        });
+      }, 1500);
     }
-    setLoading(false);
-  };
+  } catch (err) {
+    setError('Invalid OTP. Please try again.');
+  }
+
+  setLoading(false);
+};
+
 
   const handleOTPChange = (text: string, index: number) => {
     const newOtp = [...otp];

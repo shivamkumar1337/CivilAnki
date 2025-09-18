@@ -1,0 +1,20 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 14
+    },
+    "auditLog": "D:\\Anki-upsc\\temp\\CivilAnki\\backend\\src\\logs\\.3b2ac69c688a685864d4e3a9de111d2937dd2f03-audit.json",
+    "files": [
+        {
+            "date": 1758207125172,
+            "name": "D:\\Anki-upsc\\temp\\CivilAnki\\backend\\src\\logs\\debug-2025-09-18.log",
+            "hash": "eaa83bd042a779e0b618f7c2d6028bf7106b6f1673b81fb7bdd08e78953e044d"
+        },
+        {
+            "date": 1758207757904,
+            "name": "D:\\Anki-upsc\\temp\\CivilAnki\\backend\\src\\logs\\debug-2025-09-19.log",
+            "hash": "252fd05a89ecf835c47dfbc03d8c33eca90cd6f93133e620c71ee27d6c8c52e9"
+        }
+    ],
+    "hashType": "sha256"
+}
