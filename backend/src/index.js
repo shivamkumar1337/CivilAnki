@@ -26,9 +26,11 @@ app.use(express.urlencoded({ extended: true }));
 // Import and mount auth routes
 const authRoutes = require('./routes/authRoutes');
 const profileRoutes = require('./routes/ProfileRoutes');
+const subjectRoutes = require('./routes/SubjectRoutes');
 
 app.use('/auth', authRoutes);
 app.use('/profile', profileRoutes);
+app.use('/subjects', subjectRoutes);
 
 
 app.listen(PORT, HOST, () => {

@@ -60,39 +60,44 @@ const handleVerify = async () => {
   setError('');
 
   try {
-    const { success, user, error, session } = await authService.verifyOTP(mobile, otpString);
+    const { success, user, error, session, isLogin } = await authService.verifyOTP(mobile, otpString);
     if (!success) throw new Error(error);
     console.log('Verified user:', session);
 
+    // Add user data to Redux store
+    dispatch(setUser({
+      id: user?.id || '',
+      name: user?.name || '',
+      mobile: user?.phone || '',
+      email: user?.email || '',
+      isAuthenticated: true,
+      session: session,
+    }));
+
     setIsSuccess(true);
 
-    // Navigate to home
-    if(isLogin){
-//         setTimeout(() => {
-//       // Ensure userId is present before navigating (navigation types require a string)
-//        (navigation as any).reset({
-//   index: 0,
-//   routes: [{ name: 'HomeTabs' }],
-// });
-//       }, 1500);
-    }
-    else{
-    setTimeout(() => {
-      // Ensure userId is present before navigating (navigation types require a string)
+    // Navigate to home or onboarding
+    if (isLogin) {
+      setTimeout(() => {
+       navigation.reset({
+  index: 0,
+  routes: [{ name: 'Main' }], // or your actual root navigator name
+});
+      }, 1500);
+    } else {
+      setTimeout(() => {
         navigation.navigate('UserOnboarding', {
           userId: user.id,
           mobile: mobile,
         });
       }, 1500);
     }
-    
   } catch (err) {
     setError('Invalid OTP. Please try again.');
   }
 
   setLoading(false);
 };
-
 
   const handleOTPChange = (text: string, index: number) => {
     const newOtp = [...otp];

@@ -46,22 +46,7 @@ const supabase = createClient(
 );
 
 class AuthService {
-async updateProfile(updates: { 
-  name: string;
-  goal: string;
-  target_year: number;
-  status?: number;
-  mobile?: string;
-  email?: string;
-}) {
-  try {
-    const res = await axios.post(`${API_BASE}/profile/updateprofile`, { updates});
-    console.log("Profile update response:", res.data);
-    return res.data; // Adjust based on your backend's response
-  } catch (error: any) {
-    return { success: false, error: error.message };
-  }
-}
+
   
   // Move this method inside the class properly
   // getStoredOTP(mobile: string): string | null {
@@ -126,16 +111,6 @@ async updateProfile(updates: {
     }
   }
 
-
-  //check user
-async checkUserExists(mobile: string) {
-    // Assumes backend expects ?phone=+91XXXXXXXXXX
-    const res = await axios.post(`${API_BASE}/auth/check-user-exists`, 
- { credential: mobile, authType: "phone" }
-    );
-    console.log("checkUserExists response:", res.data);
-    return res.data; // { exists: true/false, ... }
-  }
 
 
 

@@ -106,7 +106,6 @@ export const Home: React.FC = () => {
         bounces={false}
       >
         <Header 
-          user={user} 
           onNotificationPress={() => {}} 
         />
         

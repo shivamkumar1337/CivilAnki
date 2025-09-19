@@ -18,9 +18,10 @@ export const Header: React.FC<HeaderProps> = ({ onNotificationPress }) => {
 
   useEffect(() => {
     const fetchProfile = async () => {
-      if (user.session?.access_token) {
+      
         try {
-          const profile = await HomeService.getProfile(user.session.access_token);
+          const {profile} = await HomeService.getProfile();
+          console.log('Fetched profile:', profile);
           dispatch(setUser({
             name: profile.name,
             email: profile.email,
@@ -30,12 +31,10 @@ export const Header: React.FC<HeaderProps> = ({ onNotificationPress }) => {
             id: profile.id,
           }));
         } catch (e) {
-          // Optionally handle error
-        }
       }
     };
     fetchProfile();
-  }, [user.session, dispatch]);
+  }, [user.session]);
 
   return (
     <View style={styles.container}>
@@ -47,12 +46,12 @@ export const Header: React.FC<HeaderProps> = ({ onNotificationPress }) => {
           <Text style={styles.avatarText}>{user.avatar}</Text>
         </LinearGradient>
         <View style={styles.greetingSection}>
-          <Text style={styles.greeting}>
-            {user.name ? `Hi, ${user.name}` : 'Welcome!'}
+          <Text style={styles.greeting}>  
+            {`Hi, ${user.name}` }
           </Text>
-          <Text style={styles.subtitle}>
+          {/* <Text style={styles.subtitle}>
             {user.email || user.mobile}
-          </Text>
+          </Text> */}
         </View>
       </View>
       <View style={styles.actions}>

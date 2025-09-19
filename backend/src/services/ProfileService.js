@@ -113,7 +113,7 @@ class ProfileService {
       const { data: profile, error } = await supabaseAnon
         .from('profiles')
         .select('*')
-        .eq('auth_user_id', userId)
+        .eq('id', userId)
         .single();
 
       if (error) {

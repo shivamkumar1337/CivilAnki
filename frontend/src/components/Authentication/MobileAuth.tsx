@@ -75,10 +75,8 @@ const handleContinue = async () => {
     setIsLoading(true);
     setError('');
     const fullMobile = `+91${mobile}`;
-    // 1. Check if user exists
-    const { data } = await authService.checkUserExists(fullMobile);
 
-    // 2. Send OTP
+    // 1. Send OTP
     const result = await authService.sendOTP(fullMobile);
 
     if (result.success) {

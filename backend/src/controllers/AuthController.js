@@ -52,6 +52,7 @@ static async sendOTP(req, res) {
  static async verifyOTP(req, res) {
   try {
     const { phone, token } = req.body;
+    const isLogin = true;
 
     if (!phone || !token) {
       // ...existing validation...
@@ -69,6 +70,7 @@ static async sendOTP(req, res) {
         const { id } = result.session.user;
         const newProfile = await ProfileService.createProfile({ phone, status: 0,id });
         userProfile = newProfile;
+        isLogin=false;
         console.log('New user profile created:', userProfile.id);
       } catch (createError) {
         console.error('Error creating user profile:', createError);
@@ -84,7 +86,8 @@ static async sendOTP(req, res) {
       message: result.message,
       user: result.user,
       session: result.session,
-      profile: userProfile
+      profile: userProfile,
+      isLogin: isLogin
     });
   } catch (error) {
     // ...existing error handling...

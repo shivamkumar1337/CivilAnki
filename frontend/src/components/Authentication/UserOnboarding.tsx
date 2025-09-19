@@ -24,6 +24,7 @@ import { useDispatch } from 'react-redux';
 import { setAuthenticated } from '../../store/slices/authSlice';
 import { setUser } from '../../store/slices/userSlice';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { HomeService } from '@/src/services/HomeService';
 
 
 type UserOnboardingRouteProp = RouteProp<AuthStackParamList, 'UserOnboarding'>;
@@ -106,11 +107,10 @@ export function UserOnboarding() {
 
     try {
       // Update user profile with onboarding data
-      await authService.updateProfile({
+      await HomeService.updateProfile({
       name,
       goal:selectedGoal,
       target_year:targetYear,
-      status:2
     });
 
 

@@ -32,7 +32,7 @@ export interface Subject {
   masteredCount: number;
   pendingToday: number;
   subtopics: SubTopic[];
-  imageUrl?: string;
+  url?: string;
 }
 
 export interface SubTopic {

@@ -23,7 +23,8 @@ export const SubjectCards: React.FC<SubjectCardsProps> = ({
       if (user.session?.access_token) {
         setLoading(true);
         try {
-          const subjectsFromApi = await HomeService.getSubjects(user.session.access_token);
+          const subjectsFromApi = await HomeService.getSubjects();
+          // console.log('Fetched subjects:', subjectsFromApi);
           setFetchedSubjects(subjectsFromApi);
         } catch (e) {
           console.error('Error fetching subjects:', e);
@@ -73,9 +74,9 @@ export const SubjectCards: React.FC<SubjectCardsProps> = ({
               backgroundColor: '#fff',
             }}
           >
-            {subject.imageUrl ? (
+            {subject.url ? (
            <Image
-  source={{ uri: "https://qilixkcxtghkifswuspn.supabase.co/storage/v1/object/sign/Subejct_img/Environment.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV85MWM5NGY3Zi0xYzI1LTRiNGQtYTQxZC05YjJhMmU4Y2UwMTEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJTdWJlamN0X2ltZy9FbnZpcm9ubWVudC5wbmciLCJpYXQiOjE3NTc2MjEzMTMsImV4cCI6MTc2MDIxMzMxM30.beiCymQb0fxWlb-03VPmLqVDdQL-aq6UZUPBI7CpOI8" }}
+  source={{ uri: subject.url }}
   style={{ width: '100%', height: '100%', resizeMode: 'cover' }}
 />
 
