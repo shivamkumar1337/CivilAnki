@@ -131,48 +131,10 @@ static async checkUserExists(credential, authType) {
   }
 
 
-  /**
-   * Send OTP for signup
-   */
-  static async sendSignupOTP(phone, name) {
-    try {
-      const phoneValidation = this.validateIndianPhone(phone);
-      if (!phoneValidation.isValid) {
-        throw new Error(phoneValidation.message);
-      }
-
-      const nameValidation = this.validateName(name);
-      if (!nameValidation.isValid) {
-        throw new Error(nameValidation.message);
-      }
-
-      // Check if user already exists
-      const userCheck = await this.checkUserExists(phone);
-      if (userCheck.exists) {
-        throw new Error('User already exists. Please sign in instead.');
-      }
-
-      // Send OTP
-      const { data, error } = await supabaseAnon.auth.signInWithOtp({
-        phone: phoneValidation.formatted,
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      return {
-        message: 'OTP sent successfully for signup',
-        data: data
-      };
-    } catch (error) {
-      console.error('Signup OTP error:', error);
-      throw error;
-    }
-  }
+ 
 
   /**
-   * Send OTP for signin
+   * Send OTP 
    */
   static async sendOTP(phone) {
     try {

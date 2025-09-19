@@ -52,7 +52,7 @@ static async sendOTP(req, res) {
  static async verifyOTP(req, res) {
   try {
     const { phone, token } = req.body;
-    const isLogin = true;
+    let isLogin = true;
 
     if (!phone || !token) {
       // ...existing validation...
@@ -64,6 +64,7 @@ static async sendOTP(req, res) {
     // 2. Check if user exists, create profile if not
     const userCheck = await AuthService.checkUserExists(phone, 'phone');
     let userProfile = userCheck.profile;
+    console.log('User exists:', userCheck.exists, userCheck.profile);
 
     if (!userCheck.exists) {
       try {

@@ -27,10 +27,11 @@ app.use(express.urlencoded({ extended: true }));
 const authRoutes = require('./routes/authRoutes');
 const profileRoutes = require('./routes/ProfileRoutes');
 const subjectRoutes = require('./routes/SubjectRoutes');
-
+const topicsRoutes = require('./routes/topicsRoutes');
 app.use('/auth', authRoutes);
 app.use('/profile', profileRoutes);
 app.use('/subjects', subjectRoutes);
+app.use('/topics', topicsRoutes);
 
 
 app.listen(PORT, HOST, () => {

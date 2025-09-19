@@ -21,6 +21,7 @@ class ProfileController {
   static async getProfile(req, res) {
     try {
       const userId = req.user?.id;
+      console.log('User ID from request:', userId);
       
       if (!userId) {
         return res.status(401).json({
@@ -54,7 +55,7 @@ class ProfileController {
    */
   static async updateProfile(req, res) {
     try {
-     const  {updates} = req.body;
+     const  updates = req.body;
       const id = req.user?.id;
       if (!updates || Object.keys(updates).length === 0) {
         return res.status(400).json({

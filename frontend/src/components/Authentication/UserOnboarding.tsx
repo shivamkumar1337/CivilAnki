@@ -106,13 +106,14 @@ export function UserOnboarding() {
     setError('');
 
     try {
+      console.log("into update profile")
       // Update user profile with onboarding data
-      await HomeService.updateProfile({
+      const response = await HomeService.updateProfile({
       name,
       goal:selectedGoal,
       target_year:targetYear,
     });
-
+      console.log('Profile update response:', response);
 
       // Set user data in Redux store
       const userDataStore = {

@@ -21,7 +21,7 @@ export function OTPVerification() {
   const navigation = useNavigation<OTPVerificationNavigationProp>();
   const dispatch = useDispatch();
   
-  const { mobile: routeMobile, isLogin, name } = route.params;
+  const { mobile: routeMobile, name } = route.params;
 
   const [mobile, setMobile] = useState(routeMobile || '');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
@@ -70,28 +70,17 @@ const handleVerify = async () => {
       name: user?.name || '',
       mobile: user?.phone || '',
       email: user?.email || '',
-      isAuthenticated: true,
+      isAuthenticated: isLogin,
       session: session,
     }));
 
     setIsSuccess(true);
 
     // Navigate to home or onboarding
-    if (isLogin) {
-      setTimeout(() => {
-       navigation.reset({
-  index: 0,
-  routes: [{ name: 'Main' }], // or your actual root navigator name
-});
-      }, 1500);
-    } else {
-      setTimeout(() => {
-        navigation.navigate('UserOnboarding', {
+  navigation.navigate('UserOnboarding', {
           userId: user.id,
           mobile: mobile,
-        });
-      }, 1500);
-    }
+        })
   } catch (err) {
     setError('Invalid OTP. Please try again.');
   }

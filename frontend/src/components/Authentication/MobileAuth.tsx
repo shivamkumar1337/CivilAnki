@@ -78,7 +78,8 @@ const handleContinue = async () => {
 
     // 1. Send OTP
     const result = await authService.sendOTP(fullMobile);
-
+    // temp
+    result.success=true;
     if (result.success) {
  
         navigation.navigate('OTPVerification', { 
