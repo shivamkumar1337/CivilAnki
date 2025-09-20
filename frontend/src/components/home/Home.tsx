@@ -1,10 +1,7 @@
 // src/screens/Home.tsx
 import React, { useEffect } from 'react';
 import { StyleSheet, SafeAreaView, ScrollView, StatusBar, View, Text, ActivityIndicator } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
 import { useSelector, useDispatch } from 'react-redux';
-import { MainStackParamList } from '@/src/navigation/types';
 import { RootState, AppDispatch } from '@/src/store';
 import { Header } from './Header';
 import { ProgressOverview } from './ProgressOverview';
@@ -12,10 +9,8 @@ import { Colors } from '@/src/constants/Colors';
 import { SubjectCards } from './SubjectCards';
 import { fetchSubjects } from '@/src/store/slices/subjectsSlice';
 
-type HomeNavigationProp = StackNavigationProp<MainStackParamList, 'HomeTabs'>;
 
 export const Home: React.FC = () => {
-  const navigation = useNavigation<HomeNavigationProp>();
   const dispatch = useDispatch<AppDispatch>();
   
   const { 
@@ -37,14 +32,6 @@ export const Home: React.FC = () => {
     console.log('Current subjects in Home:', currentSubjects);
   }, [staticSubjects, currentSubjects]);
 
-  const handleSubjectPress = (subject: any) => {
-    console.log('Subject pressed:', subject);
-    navigation.navigate('SubTopics', { subject });
-  };
-
-  const handleViewAllSubjects = () => {
-    navigation.navigate('Subjects');
-  };
 
   // Show loading state
   if (isLoading) {
@@ -83,11 +70,6 @@ export const Home: React.FC = () => {
         />
         
         <ProgressOverview
-          overallProgress={75} // Mock data for now
-          totalMastered={150}
-          totalQuestions={200}
-          todayCompleted={10}
-          todayTarget={15}
           onViewDetails={() => {}}
         />
         
@@ -102,7 +84,6 @@ export const Home: React.FC = () => {
             </View>
             <SubjectCards 
               subjects={staticSubjects}
-              onSubjectPress={handleSubjectPress}
             />
           </View>
         )}
@@ -118,7 +99,6 @@ export const Home: React.FC = () => {
             </View>
             <SubjectCards 
               subjects={currentSubjects}
-              onSubjectPress={handleSubjectPress}
             />
           </View>
         )}

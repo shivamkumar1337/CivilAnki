@@ -1,4 +1,9 @@
-import { Subject, SubTopic, YearRange, SessionData } from '../types';
+// navigation/types.ts
+import { Subject, SubTopic, YearRange, SessionData, Question } from '../types';
+
+interface SubjectScreenProps {
+  subject: Subject;
+}
 
 export type RootStackParamList = {
   Auth: undefined;
@@ -17,25 +22,30 @@ export type AuthStackParamList = {
     userId: string;
     mobile: string;
   };
-
-  // Home: undefined;
-  // Onboarding: undefined;
 };
-
+// navigation/types.ts
 export type MainStackParamList = {
-  Profile: undefined;
   HomeTabs: undefined;
-  Subjects: undefined;
-  SubTopics: {
+  SubjectScreen: { 
     subject: Subject;
   };
-  Practice: {
-    sessionData: SessionData;
+  QuestionScreen: { 
+    subject?: Subject;
+    subTopic?: SubTopic;
+    questionParams?: {
+      status?: 'due' | 'today' | 'all' | 'unattempted';
+      subject_id?: number | null;
+      topic_id?: number | null;
+      exam_id?: number | null;
+      year?: number | null;
+    };
   };
-  Summary: {
-    sessionData: SessionData;
-  };
+  SessionSummary: undefined;
+  Profile: undefined;
 };
+
+// Add your other types here...
+
 
 export type HomeTabParamList = {
   Home: undefined;

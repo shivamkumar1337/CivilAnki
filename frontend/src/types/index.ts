@@ -60,12 +60,14 @@ export interface DashboardStats {
   weeklyProgress: number[];
 }
 
+// types/index.ts (or wherever your types are defined)
 export interface SubTopic {
   id: string;
   name: string;
-  progress: number;
-  pendingCount: number;
+  subject_id: number;
+  created_at: string;
 }
+
 
 export interface YearRange {
   id: string;
@@ -76,14 +78,16 @@ export interface YearRange {
 
 export interface Question {
   id: string;
-  text: string;
+  question: string;
   options: string[];
   correctAnswer: number;
   explanation?: string;
-  year: number;
-  subject: string;
-  subtopic: string;
+  // Remove these properties that don't exist in your mock data
+  // year: number;
+  // subject: string;
+  // subtopic: string;
 }
+
 
 export interface SessionData {
   selectedSubject: Subject | null;

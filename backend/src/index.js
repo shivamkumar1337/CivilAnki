@@ -28,6 +28,11 @@ const authRoutes = require('./routes/authRoutes');
 const profileRoutes = require('./routes/ProfileRoutes');
 const subjectRoutes = require('./routes/SubjectRoutes');
 const topicsRoutes = require('./routes/topicsRoutes');
+const questionsRoutes = require('./routes/questionsRoutes');
+const progressRoutes = require('./routes/progressRoutes');
+
+app.use('/progress', progressRoutes);
+app.use('/questions', questionsRoutes);
 app.use('/auth', authRoutes);
 app.use('/profile', profileRoutes);
 app.use('/subjects', subjectRoutes);

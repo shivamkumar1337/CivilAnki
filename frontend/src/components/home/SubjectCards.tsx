@@ -1,3 +1,4 @@
+// components/SubjectCards.tsx
 import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -7,18 +8,27 @@ import { Subject } from '../../types';
 import { Card } from '../ui/Card';
 import { useSelector } from 'react-redux';
 import { HomeService } from '../../services/HomeService';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { MainStackParamList } from '../../navigation/types';
 
+type HomeNavigationProp = StackNavigationProp<MainStackParamList, 'HomeTabs'>;
 
 interface SubjectCardsProps {
   subjects: Subject[];
-  onSubjectPress: (subject: Subject) => void;
 }
 
-export const SubjectCards: React.FC<SubjectCardsProps> = ({ subjects, onSubjectPress }) => {
+export const SubjectCards: React.FC<SubjectCardsProps> = ({ subjects }) => {
+  const navigation = useNavigation<HomeNavigationProp>();
 
   useEffect(() => {
     console.log('Rendering SubjectCards with subjects:', subjects);
   }, [subjects]);
+
+  function onSubjectPress(subject: Subject): void {
+    navigation.navigate('SubjectScreen', { subject });
+  }
+
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16 }}>
       {subjects.map((subject, index) => (
@@ -45,11 +55,10 @@ export const SubjectCards: React.FC<SubjectCardsProps> = ({ subjects, onSubjectP
             }}
           >
             {subject.url ? (
-           <Image
-  source={{ uri: subject.url }}
-  style={{ width: '100%', height: '100%', resizeMode: 'cover' }}
-/>
-
+              <Image
+                source={{ uri: subject.url }}
+                style={{ width: '100%', height: '100%', resizeMode: 'cover' }}
+              />
             ) : (
               <View style={{ flex: 1, backgroundColor: '#f3f4f6' }} />
             )}
@@ -71,4 +80,4 @@ export const SubjectCards: React.FC<SubjectCardsProps> = ({ subjects, onSubjectP
       ))}
     </ScrollView>
   );
-}
+};
