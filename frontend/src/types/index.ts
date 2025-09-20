@@ -12,27 +12,52 @@ export type Screen =
   | 'settings' 
   | 'history';
 
+// src/types/index.ts
 export interface User {
   id: string;
   name: string;
-  mobile: string;
   email?: string;
+  phone: number;
+  avatar_url?: string;
+  goal: string;
+  target_year: string;
   streak: number;
-  avatar: string;
-  isAuthenticated: boolean;
-  session?: object;
+  status: number;
+  created_at: string;
+  isAuthenticated: boolean; // Keep this field
+  session?: any; // Keep session data
+  onboarding_completed?: boolean; // Add this for onboarding flow
 }
 
+// src/types/index.ts (or wherever your types are defined)
 export interface Subject {
-  id: string;
+  id: number;
   name: string;
   icon: string;
-  progress: number;
+  created_at: string;
+  url: string;
+  type: number; // Add this field: 1 = static, 2 = current
+  // Optional fields for progress tracking
+  progress?: number;
+  masteredCount?: number;
+  totalQuestions?: number;
+  pendingToday?: number;
+}
+
+export interface UserProgress {
+  overallProgress: number;
+  totalMastered: number;
   totalQuestions: number;
-  masteredCount: number;
-  pendingToday: number;
-  subtopics: SubTopic[];
-  url?: string;
+  todayCompleted: number;
+  todayTarget: number;
+}
+
+export interface DashboardStats {
+  totalSubjects: number;
+  activeSubjects: number;
+  completedToday: number;
+  streakDays: number;
+  weeklyProgress: number[];
 }
 
 export interface SubTopic {

@@ -10,48 +10,18 @@ import { HomeService } from '../../services/HomeService';
 
 
 interface SubjectCardsProps {
+  subjects: Subject[];
+  onSubjectPress: (subject: Subject) => void;
 }
 
-export const SubjectCards: React.FC<SubjectCardsProps> = ({
-}) => {
-  const user = useSelector((state: any) => state.user);
-  const [fetchedSubjects, setFetchedSubjects] = useState<Subject[]>([]);
-  const [loading, setLoading] = useState(true);
+export const SubjectCards: React.FC<SubjectCardsProps> = ({ subjects, onSubjectPress }) => {
 
   useEffect(() => {
-    const fetchData = async () => {
-      if (user.session?.access_token) {
-        setLoading(true);
-        try {
-          const subjectsFromApi = await HomeService.getSubjects();
-          // console.log('Fetched subjects:', subjectsFromApi);
-          setFetchedSubjects(subjectsFromApi);
-        } catch (e) {
-          console.error('Error fetching subjects:', e);
-        }
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, [user.session]);
-
-  const availableSubjects =  fetchedSubjects;
-
-  if (loading) {
-    return (
-      <View style={{ marginBottom: 24 }}>
-        <Text style={{ textAlign: 'center', margin: 20 }}>Loading...</Text>
-      </View>
-    );
-  }
-
-  function onSubjectPress(subject: Subject): void {
-    throw new Error('Function not implemented.');
-  }
-
+    console.log('Rendering SubjectCards with subjects:', subjects);
+  }, [subjects]);
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16 }}>
-      {availableSubjects.map((subject, index) => (
+      {subjects.map((subject, index) => (
         <TouchableOpacity
           key={subject.id ?? subject.name ?? index}
           onPress={() => onSubjectPress(subject)}

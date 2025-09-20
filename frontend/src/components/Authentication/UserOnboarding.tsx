@@ -22,7 +22,7 @@ import { AuthStackParamList } from '../../navigation/types';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useDispatch } from 'react-redux';
 import { setAuthenticated } from '../../store/slices/authSlice';
-import { setUser } from '../../store/slices/userSlice';
+import { setOnboardingCompleted, setUser } from '../../store/slices/userSlice';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { HomeService } from '@/src/services/HomeService';
 
@@ -89,54 +89,64 @@ export function UserOnboarding() {
   const [error, setError] = useState('');
 
 
-  const handleComplete = async () => {
-    // Validate all fields
-    if (name.trim().length < 2) {
-      setError('Please enter a valid name (at least 2 characters)');
-      return;
-    }
-    
-    if (!selectedGoal) {
-      setError('Please select your goal');
-      return;
-    }
+  // screens/auth/UserOnboarding.tsx
+// Update the handleComplete function in your existing component:
 
-    Keyboard.dismiss();
-    setLoading(true);
-    setError('');
+const handleComplete = async () => {
+  // Validate all fields
+  if (name.trim().length < 2) {
+    setError('Please enter a valid name (at least 2 characters)');
+    return;
+  }
+  
+  if (!selectedGoal) {
+    setError('Please select your goal');
+    return;
+  }
 
-    try {
-      console.log("into update profile")
-      // Update user profile with onboarding data
-      const response = await HomeService.updateProfile({
-      name,
-      goal:selectedGoal,
-      target_year:targetYear,
+  Keyboard.dismiss();
+  setLoading(true);
+  setError('');
+
+  try {
+    console.log("Updating profile with:", {
+      name: name.trim(),
+      goal: selectedGoal,
+      target_year: targetYear.toString(),
     });
-      console.log('Profile update response:', response);
 
-      // Set user data in Redux store
-      const userDataStore = {
-        id: userId,
-        mobile: mobile,
-        name: name.trim(),
-        goal: selectedGoal,
-        target_year: targetYear,
-        email: '',
-        isAuthenticated: true,
-        onboarding_completed: true,
-      };
+    // Update user profile with onboarding data
+    const response = await HomeService.updateProfile({
+      name: name.trim(),
+      goal: selectedGoal,
+      target_year: targetYear.toString(),
+    });
+    
+    console.log('Profile update response:', response);
 
-      dispatch(setUser(userDataStore));
-      dispatch(setAuthenticated(true));
+    // Update user data in Redux store with complete profile
+    dispatch(setUser({
+      name: name.trim(),
+      goal: selectedGoal,
+      target_year: targetYear.toString(),
+      onboarding_completed: true,
+      isAuthenticated: true, // Ensure this remains true
+    }));
 
-      // Navigation handled by Redux state change
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to complete onboarding');
-    }
+    // Mark onboarding as completed
+    dispatch(setOnboardingCompleted(true));
+    dispatch(setAuthenticated(true));
 
-    setLoading(false);
-  };
+    console.log('Onboarding completed successfully');
+    // Navigation to home will be handled by your app's auth state management
+
+  } catch (err) {
+    console.error('Profile update error:', err);
+    setError(err instanceof Error ? err.message : 'Failed to complete onboarding');
+  }
+
+  setLoading(false);
+};
 
   const isFormValid = name.trim().length >= 2 && selectedGoal;
 

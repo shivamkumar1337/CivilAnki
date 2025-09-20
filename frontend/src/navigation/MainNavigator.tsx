@@ -5,7 +5,6 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MainStackParamList, HomeTabParamList } from './types';
 import { Home } from '../components/home/Home';
 import { QuestionHistory } from '../components/QuestionHistory';
-import { Settings } from '../components/Settings';
 import { SubjectSelection } from '../components/SubjectSelection';
 import { SubTopicSelection } from '../components/SubTopicSelection';
 import { QuestionCard } from '../components/QuestionCard';
@@ -89,6 +88,7 @@ const MainNavigator: React.FC = () => {
         initialRouteName="HomeTabs"
         screenOptions={{ headerShown: false }}
       >
+        <Stack.Screen name="Profile" component={Profile} />
         <Stack.Screen name="HomeTabs" component={HomeTabs} />
         <Stack.Screen name="Subjects" component={SubjectSelection} />
         <Stack.Screen name="SubTopics" component={SubTopicSelection} />

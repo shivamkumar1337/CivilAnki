@@ -1,89 +1,53 @@
+// src/store/slices/userSlice.ts
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
-export interface User {
-  id: string;
-  name: string;
-  mobile: string;
-  email: string;
-  streak: number;
-  avatar: string;
+interface UserState {
+  id?: string;
+  name?: string;
+  email?: string;
+  phone?: number;
+  avatar_url?: string;
+  goal?: string;
+  target_year?: string;
+  streak?: number;
+  status?: number;
+  created_at?: string;
   isAuthenticated: boolean;
   session?: any;
-  // Profile specific fields
-  authUserId?: string;
-  avatarUrl?: string | null;
-  createdAt?: string;
+  onboarding_completed?: boolean;
 }
 
-const initialState: User = {
-  id: '',
-  name: '',
-  mobile: '',
-  email: '',
+const initialState: UserState = {
   streak: 0,
-  avatar: '👤',
   isAuthenticated: false,
-  session: undefined,
-  authUserId: '',
-  avatarUrl: null,
-  createdAt: '',
+  onboarding_completed: false,
 };
 
 const userSlice = createSlice({
   name: 'user',
   initialState,
   reducers: {
-    setUser: (state, action: PayloadAction<Partial<User>>) => {
+    setUser: (state, action: PayloadAction<Partial<UserState>>) => {
       return { ...state, ...action.payload };
     },
-    setUserFromAuth: (state, action: PayloadAction<{
-      user: any;
-      session: any;
-      profile: any;
-    }>) => {
-      const { user, session, profile } = action.payload;
-      
-      return {
-        ...state,
-        id: profile?.id || '',
-        authUserId: user.id,
-        name: profile?.name || '',
-        mobile: user.phone || '',
-        email: user.email || '',
-        streak: profile?.streak || 0,
-        avatar: profile?.avatar_url || '👤',
-        avatarUrl: profile?.avatar_url,
-        createdAt: profile?.created_at,
-        isAuthenticated: true,
-        session,
-      };
-    },
-    updateProfile: (state, action: PayloadAction<{
-      name?: string;
-      avatarUrl?: string;
-      streak?: number;
-    }>) => {
-      const { name, avatarUrl, streak } = action.payload;
-      
-      if (name !== undefined) state.name = name;
-      if (avatarUrl !== undefined) {
-        state.avatarUrl = avatarUrl;
-        state.avatar = avatarUrl || '👤';
-      }
-      if (streak !== undefined) state.streak = streak;
-    },
+    clearUser: () => initialState,
     updateStreak: (state, action: PayloadAction<number>) => {
       state.streak = action.payload;
     },
-    clearUser: () => initialState,
+    setAuthenticated: (state, action: PayloadAction<boolean>) => {
+      state.isAuthenticated = action.payload;
+    },
+    setOnboardingCompleted: (state, action: PayloadAction<boolean>) => {
+      state.onboarding_completed = action.payload;
+    },
   },
 });
 
 export const { 
   setUser, 
-  setUserFromAuth, 
-  updateProfile, 
+  clearUser, 
   updateStreak, 
-  clearUser 
+  setAuthenticated, 
+  setOnboardingCompleted 
 } = userSlice.actions;
 export default userSlice.reducer;

@@ -1,48 +1,44 @@
-import React from 'react';
-import { StyleSheet, SafeAreaView, ScrollView,Image, StatusBar, View, Text, TouchableOpacity, FlatList } from 'react-native';
-// import { Image } from 'expo-image';
-
+// src/screens/Home.tsx
+import React, { useEffect } from 'react';
+import { StyleSheet, SafeAreaView, ScrollView, StatusBar, View, Text, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { MainStackParamList } from '@/src/navigation/types';
-import { RootState } from '@/src/store';
+import { RootState, AppDispatch } from '@/src/store';
 import { Header } from './Header';
-import { QuickActions } from './QuickActions';
 import { ProgressOverview } from './ProgressOverview';
 import { Colors } from '@/src/constants/Colors';
-import { getImageSource } from '@/assets/images';
-import { mockSubjects,mockcurrentSubjects } from '@/src/constants/mockData';
 import { SubjectCards } from './SubjectCards';
-// import { MainStackParamList } from '../navigation/types';
-// import { RootState } from '../store';
-// import { Colors } from '../constants/Colors';
-// import { Header } from './home/Header';
-// import { QuickActions } from './home/QuickActions';
-// import { ProgressOverview } from './home/ProgressOverview';
-// import { SubjectCards } from './home/SubjectCards';
+import { fetchSubjects } from '@/src/store/slices/subjectsSlice';
 
 type HomeNavigationProp = StackNavigationProp<MainStackParamList, 'HomeTabs'>;
 
 export const Home: React.FC = () => {
   const navigation = useNavigation<HomeNavigationProp>();
-  const user = useSelector((state: RootState) => state.user);
-  // const { subjects } = useSelector((state: RootState) => state.subjects);
-  const subjects  = mockSubjects
-  const currentSubjects  = mockcurrentSubjects
-
-
+  const dispatch = useDispatch<AppDispatch>();
   
-  const totalPendingToday = subjects.reduce((sum, subject) => sum + subject.pendingToday, 0);
-  const overallProgress = subjects.reduce((sum, subject) => sum + subject.progress, 0) / subjects.length;
-  const totalMastered = subjects.reduce((sum, subject) => sum + subject.masteredCount, 0);
-  const totalQuestions = subjects.reduce((sum, subject) => sum + subject.totalQuestions, 0);
+  const { 
+    staticSubjects, 
+    currentSubjects, 
+    isLoading, 
+    error 
+  } = useSelector((state: RootState) => state.subjects);
 
-  const handleStartPractice = () => {
-    navigation.navigate('Subjects');
-  };
+  const user = useSelector((state: RootState) => state.user);
+
+  useEffect(() => {
+    // Fetch subjects on component mount
+    dispatch(fetchSubjects());
+  }, [dispatch]);
+
+  useEffect(() => {
+    console.log('Static subjects in Home:', staticSubjects);
+    console.log('Current subjects in Home:', currentSubjects);
+  }, [staticSubjects, currentSubjects]);
 
   const handleSubjectPress = (subject: any) => {
+    console.log('Subject pressed:', subject);
     navigation.navigate('SubTopics', { subject });
   };
 
@@ -50,51 +46,28 @@ export const Home: React.FC = () => {
     navigation.navigate('Subjects');
   };
 
-  // Helper SubjectCard component styled as per your design
-  // const SubjectCard = ({ subject, onPress }: { subject: any; onPress: () => void }) => (
-  //   <TouchableOpacity
-  //     onPress={onPress}
-  //     style={{
-  //       marginRight: 16,
-  //       alignItems: 'center',
-  //       width: 128,
-  //     }}
-  //     activeOpacity={0.8}
-  //   >
-  //     <View
-  //       style={{
-  //         aspectRatio: 9 / 15,
-  //         width: 128,
-  //         marginBottom: 12,
-  //         borderRadius: 12,
-  //         borderWidth: 1,
-  //         borderColor: '#e5e7eb',
-  //         overflow: 'hidden',
-  //         backgroundColor: '#fff',
-  //       }}
-  //     >
-  //       <Image
-  //         // source={subject.imageUrl}
-  //         source={getImageSource(subject.name)}
-  //         style={{ width: '100%', height: '100%', resizeMode: 'cover' }}
-  //       />
-  //     </View>
-  //     <Text
-  //       style={{
-  //         fontSize: 14,
-  //         color: '#111827',
-  //         textAlign: 'left',
-  //         width: 128,
-  //         lineHeight: 18,
-  //         fontWeight: '500',
-  //         marginLeft: 20,
-  //       }}
-  //       numberOfLines={2}
-  //     >
-  //       {subject.name}
-  //     </Text>
-  //   </TouchableOpacity>
-  // );
+  // Show loading state
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={Colors.light.primary || '#2563eb'} />
+          <Text style={styles.loadingText}>Loading subjects...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.errorText}>Error: {error}</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -109,44 +82,53 @@ export const Home: React.FC = () => {
           onNotificationPress={() => {}} 
         />
         
-        {/* <QuickActions
-          onStartPractice={handleStartPractice}
-          onReviewMissed={() => {}}
-          onViewProgress={() => {}}
-          onTakeTest={() => {}}
-        /> */}
-        
         <ProgressOverview
-          overallProgress={overallProgress}
-          totalMastered={totalMastered}
-          totalQuestions={totalQuestions}
-          todayCompleted={totalMastered}
-          todayTarget={totalPendingToday + totalMastered}
+          overallProgress={75} // Mock data for now
+          totalMastered={150}
+          totalQuestions={200}
+          todayCompleted={10}
+          todayTarget={15}
           onViewDetails={() => {}}
         />
         
-        {/* Replace the SubjectCards usage with this horizontally scrolling section */}
-        <View style={{ paddingVertical: 16 }}>
-          <View style={{ paddingHorizontal: 16, marginBottom: 12 }}>
-            <Text style={{ fontSize: 18, color: '#111827', fontWeight: '600' }}>Static</Text>
+        {/* Static Subjects Section */}
+        {staticSubjects.length > 0 && (
+          <View style={styles.sectionContainer}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Static</Text>
+              <Text style={styles.sectionSubtitle}>
+                {staticSubjects.length} subject{staticSubjects.length !== 1 ? 's' : ''}
+              </Text>
+            </View>
+            <SubjectCards 
+              subjects={staticSubjects}
+              onSubjectPress={handleSubjectPress}
+            />
           </View>
-          <SubjectCards/>
-          {/* <TouchableOpacity onPress={handleViewAllSubjects} style={{ alignSelf: 'flex-end', margin: 16 }}>
-            <Text style={{ color: '#2563eb', fontWeight: '500' }}>View All</Text>
-          </TouchableOpacity> */}
-        </View>
+        )}
 
-
-         {/* currentSubjects    */}
-         <View style={{ paddingVertical: 16 }}>
-          <View style={{ paddingHorizontal: 16, marginBottom: 12 }}>
-            <Text style={{ fontSize: 18, color: '#111827', fontWeight: '600' }}>Current</Text>
+        {/* Current Subjects Section */}
+        {currentSubjects.length > 0 && (
+          <View style={styles.sectionContainer}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Current</Text>
+              <Text style={styles.sectionSubtitle}>
+                {currentSubjects.length} subject{currentSubjects.length !== 1 ? 's' : ''}
+              </Text>
+            </View>
+            <SubjectCards 
+              subjects={currentSubjects}
+              onSubjectPress={handleSubjectPress}
+            />
           </View>
-          <SubjectCards/>
-          {/* <TouchableOpacity onPress={handleViewAllSubjects} style={{ alignSelf: 'flex-end', margin: 16 }}>
-            <Text style={{ color: '#2563eb', fontWeight: '500' }}>View All</Text>
-          </TouchableOpacity> */}
-        </View>
+        )}
+
+        {/* Show message if no subjects */}
+        {staticSubjects.length === 0 && currentSubjects.length === 0 && (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>No subjects available</Text>
+          </View>
+        )}
         
       </ScrollView>
     </SafeAreaView>
@@ -156,9 +138,56 @@ export const Home: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.light.background,
+    backgroundColor: Colors.light.background || '#ffffff',
   },
   scrollView: {
     flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: Colors.light.text,
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#ef4444',
+    textAlign: 'center',
+    paddingHorizontal: 20,
+  },
+  sectionContainer: {
+    paddingVertical: 16,
+  },
+  sectionHeader: {
+    paddingHorizontal: 16,
+    marginBottom: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  sectionTitle: {
+    fontSize: 18,
+    color: '#111827',
+    fontWeight: '600',
+  },
+  sectionSubtitle: {
+    fontSize: 14,
+    color: '#6b7280',
+    fontWeight: '400',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#6b7280',
+    textAlign: 'center',
   },
 });

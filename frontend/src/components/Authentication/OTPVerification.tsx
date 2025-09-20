@@ -55,7 +55,6 @@ const handleVerify = async () => {
   const otpString = otp.join('');
   if (otpString.length !== 6) return;
 
-  Keyboard.dismiss();
   setLoading(true);
   setError('');
 
@@ -63,6 +62,7 @@ const handleVerify = async () => {
     const { success, user, error, session, isLogin } = await authService.verifyOTP(mobile, otpString);
     if (!success) throw new Error(error);
     console.log('Verified user:', session);
+  Keyboard.dismiss();
 
     // Add user data to Redux store
     dispatch(setUser({

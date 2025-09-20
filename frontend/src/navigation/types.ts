@@ -6,7 +6,6 @@ export type RootStackParamList = {
 };
 
 export type AuthStackParamList = {
-  Welcome: undefined;
   AuthOptions: undefined;
   MobileAuth: undefined;
   OTPVerification: {
@@ -24,6 +23,7 @@ export type AuthStackParamList = {
 };
 
 export type MainStackParamList = {
+  Profile: undefined;
   HomeTabs: undefined;
   Subjects: undefined;
   SubTopics: {
