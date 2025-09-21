@@ -39,8 +39,7 @@ router.get("/", authMiddleware, async (req, res, next) => {
           subject_id,
           topic_id,
           exam_id,
-          image_url,
-          explaination,
+          image_url
         `)
         .limit(parseInt(limit));
 
@@ -84,8 +83,7 @@ router.get("/", authMiddleware, async (req, res, next) => {
           subject_id,
           topic_id,
           exam_id,
-          image_url,
-          explaination
+          image_url
         `)
         .limit(parseInt(limit));
 
@@ -108,7 +106,6 @@ router.get("/", authMiddleware, async (req, res, next) => {
         topic_id: item.topic_id,
         exam_id: item.exam_id,
         image_url: item.image_url,
-        explaination: item.explaination,
         card_type: 'new'
       }));
 
@@ -140,7 +137,6 @@ router.get("/", authMiddleware, async (req, res, next) => {
             topic_id,
             exam_id,
             image_url,
-            explaination,
             topics!inner(name)
           )
         `)
@@ -177,7 +173,6 @@ router.get("/", authMiddleware, async (req, res, next) => {
         topic_id: item.questions.topic_id,
         exam_id: item.questions.exam_id,
         image_url: item.questions.image_url,
-        explaination: item.questions.explaination,
         // Spaced repetition fields
         attempts: item.attempts,
         correct: item.correct,
