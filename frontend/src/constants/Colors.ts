@@ -24,6 +24,7 @@ export const Colors = {
     errorForeground: '#FFFFFF',
     destructive: '#DC2626',
     destructiveForeground: '#FFFFFF',
+    text: '#374151',
   },
   dark: {
     background: '#030213',

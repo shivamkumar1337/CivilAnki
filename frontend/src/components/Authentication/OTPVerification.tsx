@@ -10,6 +10,8 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { useDispatch } from 'react-redux';
 import { setAuthenticated } from '../../store/slices/authSlice';
 import { setUser } from '../../store/slices/userSlice'; // Add this import
+import { setSession } from '../../store/slices/authSlice'; // Add this import
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 type OTPVerificationRouteProp = RouteProp<AuthStackParamList, 'OTPVerification'>;
 type OTPVerificationNavigationProp = StackNavigationProp<AuthStackParamList, 'OTPVerification'>;
@@ -19,8 +21,8 @@ export function OTPVerification() {
   const navigation = useNavigation<OTPVerificationNavigationProp>();
   const dispatch = useDispatch();
   
-  const { mobile: routeMobile, isLogin, name } = route.params;
-  
+  const { mobile: routeMobile, name } = route.params;
+
   const [mobile, setMobile] = useState(routeMobile || '');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
@@ -48,50 +50,43 @@ export function OTPVerification() {
     };
   }, []);
 
-  const handleVerify = async () => {
-    const otpString = otp.join('');
-    if (otpString.length !== 6) return;
-    
-    // Dismiss keyboard before verification
-    Keyboard.dismiss();
-    
-    setLoading(true);
-    setError('');
-    
-    try {
-      const { success, data, error } = await authService.verifyOTP(mobile, otpString);
-      if (!success) throw new Error(error);
-      
-      // Update user data in Redux
-      const userData = {
-        id: data?.id || `user_${Date.now()}`,
-        name: data?.name || name || 'User',
-        mobile: mobile,
-        email: data?.email || '',
-        avatar: data?.avatar || '👤',
-        isAuthenticated: true,
-        streak: data?.streak || 0,
-      };
-      
-      // Set user data first
-      dispatch(setUser(userData));
-      // Then set authenticated status
-      dispatch(setAuthenticated(true));
-      
-      setIsSuccess(true);
-      
-      // After showing success screen, the AppNavigator will automatically 
-      // switch to MainNavigator due to Redux state change
-      setTimeout(() => {
-        // The navigation will happen automatically due to Redux state change
-        // No manual navigation needed here
-      }, 1500);
-      
-    } catch (err) {
-      setError('Invalid OTP. Please try again.');
-    }
-    setLoading(false);
-  };
+// In your existing OTPVerification.tsx file, update the handleVerify function:
+const handleVerify = async () => {
+  const otpString = otp.join('');
+  if (otpString.length !== 6) return;
+
+  setLoading(true);
+  setError('');
+
+  try {
+    const { success, user, error, session, isLogin } = await authService.verifyOTP(mobile, otpString);
+    if (!success) throw new Error(error);
+    console.log('Verified user:', session);
+  Keyboard.dismiss();
+
+    // Add user data to Redux store
+    dispatch(setUser({
+      id: user?.id || '',
+      name: user?.name || '',
+      mobile: user?.phone || '',
+      email: user?.email || '',
+      isAuthenticated: isLogin,
+      session: session,
+    }));
+
+    setIsSuccess(true);
+
+    // Navigate to home or onboarding
+  navigation.navigate('UserOnboarding', {
+          userId: user.id,
+          mobile: mobile,
+        })
+  } catch (err) {
+    setError('Invalid OTP. Please try again.');
+  }
+
+  setLoading(false);
+};
 
   const handleOTPChange = (text: string, index: number) => {
     const newOtp = [...otp];
@@ -157,28 +152,10 @@ export function OTPVerification() {
     return mobile.replace(/(\+91)(\d{5})(\d{5})/, '$1 $2 *****');
   };
 
-  if (isSuccess) {
-    return (
-      <View style={styles.successContainer}>
-        <StatusBar barStyle="dark-content" backgroundColor={Colors.light.background} />
-        <LinearGradient
-          colors={[Colors.light.success + '20', Colors.light.success + '10']}
-          style={styles.successIconContainer}
-        >
-          <Ionicons name="checkmark-circle" size={56} color={Colors.light.success} />
-        </LinearGradient>
-        <Text style={styles.successTitle}>Verification Successful!</Text>
-        <Text style={styles.successSubtitle}>
-          Welcome to CivilAnki! Setting up your account...
-        </Text>
-        <ActivityIndicator size="large" color={Colors.light.primary} style={{ marginTop: 20 }} />
-      </View>
-    );
-  }
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={Colors.light.background} />
+        <SafeAreaView style={styles.container}>
+    <StatusBar barStyle="dark-content" backgroundColor={Colors.light.background} />
       
       {/* Header */}
       <View style={styles.header}>
@@ -316,7 +293,7 @@ export function OTPVerification() {
           </LinearGradient>
         </TouchableOpacity>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 

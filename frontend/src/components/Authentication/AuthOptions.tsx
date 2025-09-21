@@ -1,20 +1,17 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, StatusBar, Dimensions } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, StatusBar} from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { useDispatch } from 'react-redux';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { Colors } from '../../constants/Colors';
 import { AuthStackParamList } from '../../navigation/types';
-
-const { width } = Dimensions.get('window');
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 type AuthOptionsNavigationProp = StackNavigationProp<AuthStackParamList, 'AuthOptions'>;
 
 export function AuthOptions() {
   const navigation = useNavigation<AuthOptionsNavigationProp>();
-  const dispatch = useDispatch();
   const [error, setError] = useState<string>('');
 
   const handleMobileAuth = () => {
@@ -22,7 +19,7 @@ export function AuthOptions() {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={Colors.light.background} />
       
       {/* Hero Section with animated gradient */}
@@ -118,7 +115,7 @@ export function AuthOptions() {
               <Text style={styles.primaryButtonText}>Start Learning Now</Text>
               <Ionicons name="arrow-forward" size={18} color={Colors.light.primaryForeground} />
             </View>
-          </LinearGradient>
+          </LinearGradient> 
         </TouchableOpacity>
 
         {/* Trust indicators
@@ -150,7 +147,7 @@ export function AuthOptions() {
           </View>
         </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 

@@ -1,46 +1,76 @@
-import React from 'react';
-import { StyleSheet, SafeAreaView, ScrollView, StatusBar } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { useSelector } from 'react-redux';
-import { MainStackParamList } from '@/src/navigation/types';
-import { RootState } from '@/src/store';
+// src/screens/Home.tsx
+import React, { useEffect } from 'react';
+import { StyleSheet, SafeAreaView, ScrollView, StatusBar, View, Text, ActivityIndicator } from 'react-native';
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState, AppDispatch } from '@/src/store';
 import { Header } from './Header';
-import { QuickActions } from './QuickActions';
 import { ProgressOverview } from './ProgressOverview';
-import { SubjectCards } from './SubjectCards';
 import { Colors } from '@/src/constants/Colors';
-// import { MainStackParamList } from '../navigation/types';
-// import { RootState } from '../store';
-// import { Colors } from '../constants/Colors';
-// import { Header } from './home/Header';
-// import { QuickActions } from './home/QuickActions';
-// import { ProgressOverview } from './home/ProgressOverview';
-// import { SubjectCards } from './home/SubjectCards';
+import { SubjectCards } from './SubjectCards';
+import { fetchSubjects } from '@/src/store/slices/subjectsSlice';
+import { HomeService } from '@/src/services/HomeService';
 
-type HomeNavigationProp = StackNavigationProp<MainStackParamList, 'HomeTabs'>;
 
 export const Home: React.FC = () => {
-  const navigation = useNavigation<HomeNavigationProp>();
-  const user = useSelector((state: RootState) => state.user);
-  const { subjects } = useSelector((state: RootState) => state.subjects);
+  const dispatch = useDispatch<AppDispatch>();
   
-  const totalPendingToday = subjects.reduce((sum, subject) => sum + subject.pendingToday, 0);
-  const overallProgress = subjects.reduce((sum, subject) => sum + subject.progress, 0) / subjects.length;
-  const totalMastered = subjects.reduce((sum, subject) => sum + subject.masteredCount, 0);
-  const totalQuestions = subjects.reduce((sum, subject) => sum + subject.totalQuestions, 0);
+  const { 
+    staticSubjects, 
+    currentSubjects, 
+    isLoading, 
+    error 
+  } = useSelector((state: RootState) => state.subjects);
 
-  const handleStartPractice = () => {
-    navigation.navigate('Subjects');
+  const user = useSelector((state: RootState) => state.user);
+
+  useEffect(() => {
+    // Fetch subjects on component mount
+    dispatch(fetchSubjects());
+  }, [dispatch]);
+
+  useEffect(() => {
+    console.log('Static subjects in Home:', staticSubjects);
+    console.log('Current subjects in Home:', currentSubjects);
+  }, [staticSubjects, currentSubjects]);
+
+  useEffect(() => {
+  const fetchProgressStats = async () => {
+    try {
+      const stats = await HomeService.getProgressStats();
+      console.log('Progress stats:', stats);
+      // You can store this in Redux or local state
+    } catch (error) {
+      console.error('Error fetching progress stats:', error);
+    }
   };
 
-  const handleSubjectPress = (subject: any) => {
-    navigation.navigate('SubTopics', { subject });
-  };
+  if (user.isAuthenticated) {
+    fetchProgressStats();
+  }
+}, [user.isAuthenticated]);
 
-  const handleViewAllSubjects = () => {
-    navigation.navigate('Subjects');
-  };
+  // Show loading state
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={Colors.light.primary || '#2563eb'} />
+          <Text style={styles.loadingText}>Loading subjects...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.errorText}>Error: {error}</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -52,31 +82,50 @@ export const Home: React.FC = () => {
         bounces={false}
       >
         <Header 
-          user={user} 
           onNotificationPress={() => {}} 
         />
         
-        <QuickActions
-          onStartPractice={handleStartPractice}
-          onReviewMissed={() => {}}
-          onViewProgress={() => {}}
-          onTakeTest={() => {}}
-        />
-        
         <ProgressOverview
-          overallProgress={overallProgress}
-          totalMastered={totalMastered}
-          totalQuestions={totalQuestions}
-          todayCompleted={totalMastered}
-          todayTarget={totalPendingToday + totalMastered}
           onViewDetails={() => {}}
         />
         
-        <SubjectCards
-          subjects={subjects}
-          onSubjectPress={handleSubjectPress}
-          onViewAll={handleViewAllSubjects}
-        />
+        {/* Static Subjects Section */}
+        {staticSubjects.length > 0 && (
+          <View style={styles.sectionContainer}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Static</Text>
+              <Text style={styles.sectionSubtitle}>
+                {staticSubjects.length} subject{staticSubjects.length !== 1 ? 's' : ''}
+              </Text>
+            </View>
+            <SubjectCards 
+              subjects={staticSubjects}
+            />
+          </View>
+        )}
+
+        {/* Current Subjects Section */}
+        {currentSubjects.length > 0 && (
+          <View style={styles.sectionContainer}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Current</Text>
+              <Text style={styles.sectionSubtitle}>
+                {currentSubjects.length} subject{currentSubjects.length !== 1 ? 's' : ''}
+              </Text>
+            </View>
+            <SubjectCards 
+              subjects={currentSubjects}
+            />
+          </View>
+        )}
+
+        {/* Show message if no subjects */}
+        {staticSubjects.length === 0 && currentSubjects.length === 0 && (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>No subjects available</Text>
+          </View>
+        )}
+        
       </ScrollView>
     </SafeAreaView>
   );
@@ -85,9 +134,56 @@ export const Home: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.light.background,
+    backgroundColor: Colors.light.background || '#ffffff',
   },
   scrollView: {
     flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: Colors.light.text,
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#ef4444',
+    textAlign: 'center',
+    paddingHorizontal: 20,
+  },
+  sectionContainer: {
+    paddingVertical: 16,
+  },
+  sectionHeader: {
+    paddingHorizontal: 16,
+    marginBottom: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  sectionTitle: {
+    fontSize: 18,
+    color: '#111827',
+    fontWeight: '600',
+  },
+  sectionSubtitle: {
+    fontSize: 14,
+    color: '#6b7280',
+    fontWeight: '400',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#6b7280',
+    textAlign: 'center',
   },
 });

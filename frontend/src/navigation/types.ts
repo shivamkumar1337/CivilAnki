@@ -1,4 +1,9 @@
-import { Subject, SubTopic, YearRange, SessionData } from '../types';
+// navigation/types.ts
+import { Subject, SubTopic, YearRange, SessionData, Question } from '../types';
+
+// interface SubjectScreenProps {
+//   subject: Subject;
+// }
 
 export type RootStackParamList = {
   Auth: undefined;
@@ -6,7 +11,6 @@ export type RootStackParamList = {
 };
 
 export type AuthStackParamList = {
-  Welcome: undefined;
   AuthOptions: undefined;
   MobileAuth: undefined;
   OTPVerification: {
@@ -14,27 +18,39 @@ export type AuthStackParamList = {
     isLogin: boolean;
     name?: string;
   };
-  // Home: undefined;
-  // Onboarding: undefined;
+  UserOnboarding: {
+    userId: string;
+    mobile: string;
+  };
 };
-
+// navigation/types.ts
 export type MainStackParamList = {
   HomeTabs: undefined;
-  Subjects: undefined;
-  SubTopics: {
+  SubjectScreen: { 
     subject: Subject;
   };
-  Practice: {
-    sessionData: SessionData;
+  QuestionScreen: {
+    subject?: Subject;
+    subTopic?: SubTopic;
+    questionParams?: {
+      status?: string;
+      subject_id?: number;
+      topic_id?: number;
+      exam_id?: number;
+      year?: number;
+      limit?: number;
+    };
   };
-  Summary: {
-    sessionData: SessionData;
-  };
+  SessionSummary: undefined;
+  Profile: undefined;
 };
+
+// Add your other types here...
+
 
 export type HomeTabParamList = {
   Home: undefined;
-  Practice: undefined;
+  Search: undefined;
   History: undefined;
-  Profile: undefined;
+  Courses: undefined;
 };

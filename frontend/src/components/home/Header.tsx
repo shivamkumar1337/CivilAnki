@@ -1,44 +1,108 @@
-import React from 'react';
+// src/components/home/Header.tsx
+import React, { useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 import { Colors } from '../../constants/Colors';
 import { User } from '../../types';
+import { useDispatch, useSelector } from 'react-redux';
+import { HomeService } from '../../services/HomeService';
+import { setUser } from '../../store/slices/userSlice';
+import { MainStackParamList } from '../../navigation/types';
 
 interface HeaderProps {
-  user: User;
   onNotificationPress: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ user, onNotificationPress }) => {
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning';
-    if (hour < 17) return 'Good afternoon';
-    return 'Good evening';
+type HeaderNavigationProp = StackNavigationProp<MainStackParamList>;
+
+export const Header: React.FC<HeaderProps> = ({ onNotificationPress }) => {
+  const dispatch = useDispatch();
+  const navigation = useNavigation<HeaderNavigationProp>();
+  const user = useSelector((state: any) => state.user);
+
+  // src/components/home/Header.tsx
+// Update the useEffect in your existing Header component:
+
+useEffect(() => {
+  const fetchProfile = async () => {
+    // Only fetch profile if user is authenticated
+    if (!user.isAuthenticated || !user.session) {
+      return;
+    }
+
+    try {
+      const { profile } = await HomeService.getProfile();
+      console.log('Fetched profile:', profile);
+      
+      // Update user data while preserving authentication state
+      dispatch(setUser({
+        ...user, // Preserve existing user data
+        name: profile.name,
+        email: profile.email,
+        phone: profile.phone,
+        streak: profile.streak,
+        goal: profile.goal,
+        target_year: profile.target_year,
+        avatar_url: profile.avatar_url,
+        id: profile.id,
+        status: profile.status,
+        created_at: profile.created_at,
+        // Keep authentication state
+        isAuthenticated: true,
+        onboarding_completed: true,
+      }));
+    } catch (e) {
+      console.error('Error fetching profile:', e);
+    }
+  };
+
+  fetchProfile();
+}, [user.session, user.isAuthenticated]); // Depend on session and auth state
+
+  const handleProfilePress = () => {
+    navigation.navigate('Profile');
+  };
+
+  // Generate avatar text from name
+  const getAvatarText = (name: string) => {
+    if (!name) return '👤';
+    return name.charAt(0).toUpperCase();
   };
 
   return (
     <View style={styles.container}>
-      <View style={styles.userSection}>
+      <TouchableOpacity 
+        style={styles.userSection} 
+        onPress={handleProfilePress}
+        activeOpacity={0.7}
+      >
         <LinearGradient
           colors={[Colors.light.primary + '15', Colors.light.primary + '08']}
           style={styles.avatar}
         >
-          <Text style={styles.avatarText}>{user.avatar}</Text>
+          <Text style={styles.avatarText}>
+            {user.avatar_url ? user.avatar_url : getAvatarText(user.name || '')}
+          </Text>
         </LinearGradient>
         <View style={styles.greetingSection}>
-          <Text style={styles.greeting}>
-            {getGreeting()}, {user.name.split(' ')[0]}
+          <Text style={styles.greeting}>  
+            {`Hi, ${user.name || 'User'}`}
           </Text>
-          <Text style={styles.subtitle}>Ready for today's practice?</Text>
+          {user.goal && (
+            <Text style={styles.subtitle}>
+              {user.goal} • {user.target_year}
+            </Text>
+          )}
         </View>
-      </View>
+      </TouchableOpacity>
       
       <View style={styles.actions}>
         <View style={styles.streakBadge}>
           <Ionicons name="flame" size={14} color="#FF6B35" />
-          <Text style={styles.streakText}>{user.streak}</Text>
+          <Text style={styles.streakText}>{user.streak || 0}</Text>
         </View>
         <TouchableOpacity style={styles.notificationButton} onPress={onNotificationPress}>
           <Ionicons name="notifications-outline" size={18} color={Colors.light.foreground} />
@@ -53,8 +117,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: Colors.light.background,
+    paddingBottom: 10,
+    paddingTop: 2,
   },
   userSection: {
     flex: 1,
@@ -71,6 +135,7 @@ const styles = StyleSheet.create({
   },
   avatarText: {
     fontSize: 18,
+    fontWeight: '600',
   },
   greetingSection: {
     flex: 1,

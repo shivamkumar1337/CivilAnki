@@ -1,4 +1,5 @@
-import { User, Subject, YearRange, Question } from '../types';
+// import { images } from '../../assets/images';
+import { Question, Subject, User, YearRange } from '../types';
 
 export const mockUser: User = {
   id: "1",
@@ -10,64 +11,93 @@ export const mockUser: User = {
   isAuthenticated: false,
 };
 
-export const mockSubjects: Subject[] = [
+export const mockSubjects = [
   {
-    id: 'polity',
-    name: 'Polity',
-    icon: '🏛️',
-    progress: 75,
-    totalQuestions: 450,
-    masteredCount: 338,
-    pendingToday: 12,
-    subtopics: [
-      { id: 'constitution', name: 'Constitution', progress: 80, pendingCount: 5 },
-      { id: 'parliament', name: 'Parliament', progress: 70, pendingCount: 7 },
-      { id: 'judiciary', name: 'Judiciary', progress: 85, pendingCount: 0 }
-    ]
-  },
-  {
-    id: 'history',
-    name: 'History',
-    icon: '📜',
-    progress: 60,
-    totalQuestions: 380,
-    masteredCount: 228,
-    pendingToday: 18,
-    subtopics: [
-      { id: 'ancient', name: 'Ancient India', progress: 65, pendingCount: 8 },
-      { id: 'medieval', name: 'Medieval India', progress: 55, pendingCount: 10 },
-      { id: 'modern', name: 'Modern India', progress: 60, pendingCount: 0 }
-    ]
+    id: 'economy',
+    name: 'Economy',
+    // imageUrl: images.economy,
+    progress: 23,
+    totalQuestions: 540,
+    completedQuestions: 124,
   },
   {
     id: 'geography',
     name: 'Geography',
-    icon: '🗺️',
-    progress: 45,
-    totalQuestions: 320,
-    masteredCount: 144,
-    pendingToday: 25,
-    subtopics: [
-      { id: 'physical', name: 'Physical Geography', progress: 50, pendingCount: 15 },
-      { id: 'indian', name: 'Indian Geography', progress: 40, pendingCount: 10 },
-      { id: 'world', name: 'World Geography', progress: 45, pendingCount: 0 }
-    ]
+    // imageUrl: images.geography,
+    progress: 78,
+    totalQuestions: 650,
+    completedQuestions: 507,
   },
   {
-    id: 'economy',
-    name: 'Economy',
-    icon: '💰',
-    progress: 55,
+    id: 'history',
+    name: 'History',
+    // imageUrl: images.history,
+    progress: 42,
+    totalQuestions: 720,
+    completedQuestions: 302,
+  },
+  {
+    id: 'polity',
+    name: 'Polity',
+    // imageUrl: images.polity,
+    progress: 65,
+    totalQuestions: 850,
+    completedQuestions: 553,
+  },
+  {
+    id: 'environment',
+    name: 'Environment',
+    // imageUrl: images.environment,
+    progress: 34,
+    totalQuestions: 380,
+    completedQuestions: 129,
+  },
+ 
+  {
+    id: 'art-culture',
+    name: 'Art&Culture',
+    // imageUrl: images.artCulture,
+    progress: 47,
+    totalQuestions: 420,
+    completedQuestions: 197,
+  },
+  
+] as unknown as Subject[];
+
+export const mockcurrentSubjects = [
+  {
+    id: 'mapping',
+    name: 'Mapping',
+    // imageUrl: images.mapping,
+    progress: 89,
+    totalQuestions: 320,
+    completedQuestions: 285,
+  },
+  {
+    id: 'govt-schemes',
+    name: 'GovernmentSchemes',
+    // imageUrl: images.governmentSchemes,
+    progress: 72,
     totalQuestions: 290,
-    masteredCount: 160,
-    pendingToday: 15,
-    subtopics: [
-      { id: 'basics', name: 'Economic Basics', progress: 60, pendingCount: 8 },
-      { id: 'indian-economy', name: 'Indian Economy', progress: 50, pendingCount: 7 },
-      { id: 'world-economy', name: 'World Economy', progress: 55, pendingCount: 0 }
-    ]
-  }
-];
+    completedQuestions: 209,
+  },
+  {
+    id: 'current-affairs',
+    name: 'CurrentAffiars',
+    // imageUrl: images.currentAffairs,
+    progress: 45,
+    totalQuestions: 450,
+    completedQuestions: 203,
+  },
+   {
+    id: 'science',
+    name: 'Science&Tech',
+    // imageUrl: images.scienceTech,
+    progress: 55,
+    totalQuestions: 480,
+    completedQuestions: 264,
+  },
+] as unknown as Subject[];
 
 export const mockYearRanges: YearRange[] = [
   { id: 'old', label: '1980-2010', range: '1980-2010', questionCount: 120 },

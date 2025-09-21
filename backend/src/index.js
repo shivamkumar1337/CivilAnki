@@ -1,42 +1,47 @@
-const express = require("express");
-const cors = require("cors");
-const dotenv = require("dotenv");
+const express = require('express');
+const cors = require('cors');
+const dotenv = require('dotenv');
 
+// Load environment variables
 dotenv.config();
 
-const profilesRouter = require("./routes/profiles");
-const subjectsRouter = require("./routes/subjects");
-const topicsRouter = require("./routes/topics");
-const questionsRouter = require("./routes/questions");
-const progressRouter = require("./routes/progress");
-const authRoutes = require('./routes/auth');
-
-const { errorHandler } = require("./middlewares/errorHandler");
-
 const app = express();
-const PORT = process.env.PORT || 4000;
-console.log("PORT:", PORT);
+const PORT = process.env.PORT || 8000;
+const HOST = process.env.URL || 'localhost';
 
-app.use(cors());
+// // Middleware
+// app.use(cors({
+//   origin: ['http://localhost:3000', 'http://localhost:19006', 'exp://192.168.1.100:19000'],
+//   credentials: true
+// }));
+
+app.use(cors({
+  origin: '*', // or specify your Expo dev URL
+  // credentials: true
+}));
+
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-app.use("/profiles", profilesRouter);
-app.use("/progress", progressRouter);
-app.use("/questions", questionsRouter);
-app.use("/subjects", subjectsRouter);
-app.use("/topics", topicsRouter);
+// Import and mount auth routes
+const authRoutes = require('./routes/authRoutes');
+const profileRoutes = require('./routes/ProfileRoutes');
+const subjectRoutes = require('./routes/SubjectRoutes');
+const topicsRoutes = require('./routes/topicsRoutes');
+const questionsRoutes = require('./routes/questionsRoutes');
+const progressRoutes = require('./routes/progressRoutes');
+const settingsRoutes = require('./routes/settingsRoutes');
+// const spaceRepetitionRoutes = require('./routes/spaceRepetitionRoutes');
+
+app.use('/progress', progressRoutes);
+app.use('/questions', questionsRoutes);
 app.use('/auth', authRoutes);
-app.use(errorHandler);
+app.use('/profile', profileRoutes);
+app.use('/subjects', subjectRoutes);
+app.use('/topics', topicsRoutes);
+app.use('/settings', settingsRoutes);
+// app.use('/spaced-repetition', spaceRepetitionRoutes);
 
-/* simple health check */
-app.get("/health", (_req, res) => {
-  res.json({ status: "ok", at: new Date().toISOString() });
-});
-
-app.get("/", (_req, res) => {
-  res.send("CivilAnki backend is running!");
-});
-
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+app.listen(PORT, HOST, () => {
+  console.log(`🚀 Server running on http://${HOST}:${PORT}`);
 });

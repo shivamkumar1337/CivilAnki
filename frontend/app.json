@@ -9,7 +9,7 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/images/splash-icon.png",
+      "image": "./assets/images/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -21,7 +21,8 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.subzero1337.civilanki"
     },
     "web": {
       "bundler": "metro",
@@ -39,6 +40,11 @@
       "eas": {
         "projectId": "732eabdc-ccf9-45b8-b477-b1a1f64c0e55"
       }
+    },
+    "androidStatusBar": {
+    "translucent": true,
+    "barStyle": "light-content",
+    "backgroundColor": "transparent"
     },
     "owner": "subzero1337"
   }
