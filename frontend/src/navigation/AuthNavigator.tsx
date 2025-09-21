@@ -13,7 +13,6 @@ const AuthNavigator: React.FC = () => {
       initialRouteName="AuthOptions"
       screenOptions={{ headerShown: false }}
     >
-      {/* <Stack.Screen name="Welcome" component={Welcome} /> */}
       <Stack.Screen name="AuthOptions" component={AuthOptions} />
       <Stack.Screen name="MobileAuth" component={MobileAuth} />
       <Stack.Screen name="OTPVerification" component={OTPVerification} />

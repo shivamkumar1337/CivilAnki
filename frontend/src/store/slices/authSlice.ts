@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 export interface AuthState {
   mobile: string;
   name: string;
-  isLogin: boolean; // true for sign in, false for sign up
+  isLogin: boolean; // true for login, false for sign up
 }
 
 interface AuthSliceState {

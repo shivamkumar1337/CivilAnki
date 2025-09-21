@@ -9,10 +9,6 @@ router.post('/otp', AuthController.sendOTP);
 router.post('/verify-otp', AuthController.verifyOTP);
 router.post('/check-user-exists', AuthController.checkUserExists);
 router.post('/refresh', AuthController.refreshToken);
-// router.get('/health', AuthController.healthCheck);
-
-// Protected routes
-// router.get('/profile', authMiddleware, AuthController.getCurrentUser);
 router.post('/signout', authMiddleware, AuthController.signOut);
 
 module.exports = router;

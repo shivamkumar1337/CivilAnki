@@ -1,17 +1,8 @@
-/**
- * Authentication Controller
- * Complete auth controller with all endpoints and validation
- */
-
 const AuthService = require('../services/AuthService');
 const ProfileService = require('../services/ProfileService');
 
 class AuthController {
 
-  /**
-   * Send OTP for signin
-   * POST /auth/sendOTP
-   */
 static async sendOTP(req, res) {
   try {
     const { phone } = req.body;
@@ -23,8 +14,6 @@ static async sendOTP(req, res) {
       });
     }
 
-    // Check if user exists using the service
-
     // Send OTP regardless of whether user existed or was just created
     const result = await AuthService.sendOTP(phone);
 
@@ -33,7 +22,7 @@ static async sendOTP(req, res) {
       message: result.message,
     });
   } catch (error) {
-    console.error('Signin OTP controller error:', error);
+    console.error('Error in Sending otp:', error);
 
     const statusCode = error.message.includes('not found') ? 404 : 400;
 
@@ -44,11 +33,6 @@ static async sendOTP(req, res) {
   }
 }
 
-
-  /**
-   * Verify OTP and complete authentication
-   * POST /auth/verify-otp
-   */
  static async verifyOTP(req, res) {
   try {
     const { phone, token } = req.body;
@@ -62,6 +46,12 @@ static async sendOTP(req, res) {
     const result = await AuthService.verifyOTP(phone, token);
 
     // 2. Check if user exists, create profile if not
+    if(!result || !result.session || !result.session.user) {
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to verify OTP or retrieve user session'
+      });
+    }
     const userCheck = await AuthService.checkUserExists(phone, 'phone');
     let userProfile = userCheck.profile;
     console.log('User exists:', userCheck.exists, userCheck.profile);
@@ -91,13 +81,16 @@ static async sendOTP(req, res) {
       isLogin: isLogin
     });
   } catch (error) {
-    // ...existing error handling...
+    console.error('Error in Verifying otp:', error);
+
+    const statusCode = error.message.includes('Invalid') ? 401 : 400; 
+    return res.status(statusCode).json({
+      success: false,
+      error: error.message
+    });
   }
 }
-  /**
-   * Sign out user
-   * POST /auth/signout
-   */
+
   static async signOut(req, res) {
     try {
       const authHeader = req.headers.authorization;
@@ -161,208 +154,163 @@ static async checkUserExists(req, res) {
     }
   }
 
-  /**
-   * Validate token
-   * POST /auth/validate-token
-   */
-  static async validateToken(req, res) {
-    try {
-      const authHeader = req.headers.authorization;
+  // static async validateToken(req, res) {
+  //   try {
+  //     const authHeader = req.headers.authorization;
 
-      if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return res.status(401).json({
-          success: false,
-          error: 'Missing or invalid authorization header'
-        });
-      }
+  //     if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  //       return res.status(401).json({
+  //         success: false,
+  //         error: 'Missing or invalid authorization header'
+  //       });
+  //     }
 
-      const token = authHeader.split(' ')[1];
+  //     const token = authHeader.split(' ')[1];
 
-      // Use Supabase to validate token
-      const { supabaseAnon } = require('../config/supabaseClient');
-      const { data: { user }, error } = await supabaseAnon.auth.getUser(token);
+  //     // Use Supabase to validate token
+  //     const { supabaseAnon } = require('../config/supabaseClient');
+  //     const { data: { user }, error } = await supabaseAnon.auth.getUser(token);
 
-      if (error || !user) {
-        return res.status(401).json({
-          success: false,
-          error: 'Invalid or expired token'
-        });
-      }
+  //     if (error || !user) {
+  //       return res.status(401).json({
+  //         success: false,
+  //         error: 'Invalid or expired token'
+  //       });
+  //     }
 
-      return res.status(200).json({
-        success: true,
-        message: 'Token is valid',
-        data: {
-          valid: true,
-          user: {
-            id: user.id,
-            phone: user.phone,
-            created_at: user.created_at
-          }
-        }
-      });
-    } catch (error) {
-      console.error('Validate token controller error:', error);
+  //     return res.status(200).json({
+  //       success: true,
+  //       message: 'Token is valid',
+  //       data: {
+  //         valid: true,
+  //         user: {
+  //           id: user.id,
+  //           phone: user.phone,
+  //           created_at: user.created_at
+  //         }
+  //       }
+  //     });
+  //   } catch (error) {
+  //     console.error('Validate token controller error:', error);
 
-      return res.status(500).json({
-        success: false,
-        error: 'Token validation failed'
-      });
-    }
-  }
+  //     return res.status(500).json({
+  //       success: false,
+  //       error: 'Token validation failed'
+  //     });
+  //   }
+  // }
 
   /**
    * Get current user
    * GET /auth/user
    */
-  static async getCurrentUser(req, res) {
-    try {
-      const authHeader = req.headers.authorization;
+  // static async getCurrentUser(req, res) {
+  //   try {
+  //     const authHeader = req.headers.authorization;
 
-      if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return res.status(401).json({
-          success: false,
-          error: 'Missing or invalid authorization header'
-        });
-      }
+  //     if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  //       return res.status(401).json({
+  //         success: false,
+  //         error: 'Missing or invalid authorization header'
+  //       });
+  //     }
 
-      const token = authHeader.split(' ')[1];
+  //     const token = authHeader.split(' ')[1];
 
-      // Get user and profile
-      const { supabaseAnon } = require('../config/supabaseClient');
-      const { data: { user }, error } = await supabaseAnon.auth.getUser(token);
+  //     // Get user and profile
+  //     const { supabaseAnon } = require('../config/supabaseClient');
+  //     const { data: { user }, error } = await supabaseAnon.auth.getUser(token);
 
-      if (error || !user) {
-        return res.status(401).json({
-          success: false,
-          error: 'Invalid or expired token'
-        });
-      }
+  //     if (error || !user) {
+  //       return res.status(401).json({
+  //         success: false,
+  //         error: 'Invalid or expired token'
+  //       });
+  //     }
 
-      // Get user profile
-      const { data: profile, error: profileError } = await supabaseAnon
-        .from('profiles')
-        .select('*')
-        .eq('auth_user_id', user.id)
-        .single();
+  //     // Get user profile
+  //     const { data: profile, error: profileError } = await supabaseAnon
+  //       .from('profiles')
+  //       .select('*')
+  //       .eq('auth_user_id', user.id)
+  //       .single();
 
-      return res.status(200).json({
-        success: true,
-        message: 'User retrieved successfully',
-        data: {
-          user: {
-            id: user.id,
-            phone: user.phone,
-            created_at: user.created_at
-          },
-          profile: profile || null
-        }
-      });
-    } catch (error) {
-      console.error('Get current user controller error:', error);
+  //     return res.status(200).json({
+  //       success: true,
+  //       message: 'User retrieved successfully',
+  //       data: {
+  //         user: {
+  //           id: user.id,
+  //           phone: user.phone,
+  //           created_at: user.created_at
+  //         },
+  //         profile: profile || null
+  //       }
+  //     });
+  //   } catch (error) {
+  //     console.error('Get current user controller error:', error);
 
-      return res.status(500).json({
-        success: false,
-        error: 'Failed to retrieve user'
-      });
-    }
-  }
+  //     return res.status(500).json({
+  //       success: false,
+  //       error: 'Failed to retrieve user'
+  //     });
+  //   }
+  // }
 
-  /**
-   * Refresh token
-   * POST /auth/refresh
-   */
-  static async refreshToken(req, res) {
-    try {
-      const { refresh_token } = req.body;
+  // /**
+  //  * Refresh token
+  //  * POST /auth/refresh
+  //  */
+  // static async refreshToken(req, res) {
+  //   try {
+  //     const { refresh_token } = req.body;
 
-      if (!refresh_token) {
-        return res.status(400).json({
-          success: false,
-          error: 'Refresh token is required'
-        });
-      }
+  //     if (!refresh_token) {
+  //       return res.status(400).json({
+  //         success: false,
+  //         error: 'Refresh token is required'
+  //       });
+  //     }
 
-      const { supabaseAnon } = require('../config/supabaseClient');
-      const { data, error } = await supabaseAnon.auth.refreshSession({
-        refresh_token: refresh_token
-      });
+  //     const { supabaseAnon } = require('../config/supabaseClient');
+  //     const { data, error } = await supabaseAnon.auth.refreshSession({
+  //       refresh_token: refresh_token
+  //     });
 
-      if (error) {
-        console.error('Token refresh failed:', error);
-        return res.status(401).json({
-          success: false,
-          error: 'Invalid refresh token'
-        });
-      }
+  //     if (error) {
+  //       console.error('Token refresh failed:', error);
+  //       return res.status(401).json({
+  //         success: false,
+  //         error: 'Invalid refresh token'
+  //       });
+  //     }
 
-      return res.status(200).json({
-        success: true,
-        message: 'Token refreshed successfully',
-        data: {
-          session: {
-            access_token: data.session.access_token,
-            refresh_token: data.session.refresh_token,
-            expires_at: data.session.expires_at,
-            token_type: data.session.token_type
-          },
-          user: {
-            id: data.user.id,
-            phone: data.user.phone
-          }
-        }
-      });
-    } catch (error) {
-      console.error('Refresh token controller error:', error);
+  //     return res.status(200).json({
+  //       success: true,
+  //       message: 'Token refreshed successfully',
+  //       data: {
+  //         session: {
+  //           access_token: data.session.access_token,
+  //           refresh_token: data.session.refresh_token,
+  //           expires_at: data.session.expires_at,
+  //           token_type: data.session.token_type
+  //         },
+  //         user: {
+  //           id: data.user.id,
+  //           phone: data.user.phone
+  //         }
+  //       }
+  //     });
+  //   } catch (error) {
+  //     console.error('Refresh token controller error:', error);
 
-      return res.status(500).json({
-        success: false,
-        error: 'Token refresh failed'
-      });
-    }
-  }
+  //     return res.status(500).json({
+  //       success: false,
+  //       error: 'Token refresh failed'
+  //     });
+  //   }
+  // }
 
-  /**
-   * Health check
-   * GET /auth/health
-   */
-  static async healthCheck(req, res) {
-    try {
-      // Test basic functionality
-      const testPhone = '+919999999999';
-
-      // This should not throw an error for a non-existent user
-      const testResult = AuthService.validateIndianPhone(testPhone);
-
-      return res.status(200).json({
-        success: true,
-        message: 'Auth service is healthy',
-        data: {
-          service: 'auth',
-          status: 'healthy',
-          features: {
-            phoneValidation: testResult.isValid ? 'operational' : 'error',
-            otpService: 'operational',
-            tokenValidation: 'operational'
-          },
-          timestamp: new Date().toISOString()
-        }
-      });
-    } catch (error) {
-      console.error('Auth health check failed:', error);
-
-      return res.status(503).json({
-        success: false,
-        error: 'Auth service unhealthy',
-        data: {
-          service: 'auth',
-          status: 'unhealthy',
-          error: error.message,
-          timestamp: new Date().toISOString()
-        }
-      });
-    }
-  }
 }
 
 module.exports = AuthController;

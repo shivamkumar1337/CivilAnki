@@ -1,13 +1,5 @@
-/**
- * Authentication Middleware
- * Complete auth middleware using Supabase for JWT verification
- */
-
 const { supabaseAnon } = require('../config/supabaseClient');
 
-/**
- * Middleware to verify JWT token and attach user to request
- */
 const authMiddleware = async (req, res, next) => {
   try {
     // Extract token from Authorization header

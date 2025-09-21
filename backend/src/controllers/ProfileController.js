@@ -1,12 +1,7 @@
-/**
- * Profile Controller
- * Simple profile controller with basic JSON responses
- */
-
 const ProfileService = require('../services/ProfileService');
 
 class ProfileController {
-  //create profile
+  
   static async  createProfile({ phone, status = 0, }) {
     const id = user.id;
   const { data, error } = await ProfileService.createProfile({ phone, status,id });

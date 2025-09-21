@@ -1,14 +1,7 @@
-/**
- * Authentication Service
- * Simple authentication service using only Supabase client
- */
-
 const { supabaseAnon } = require('../config/supabaseClient');
 
 class AuthService {
-  /**
-   * Validate Indian phone number
-   */
+
   static validateIndianPhone(phone) {
     if (!phone) {
       return { isValid: false, message: 'Phone number is required' };
@@ -25,34 +18,31 @@ class AuthService {
       };
     }
 
-    // Check 12-digit format with 91 prefix
-    if (/^91[6-9]\d{9}$/.test(cleanPhone)) {
-      return { 
-        isValid: true, 
-        formatted: `+${cleanPhone}`,
-        numeric: cleanPhone // For database storage
-      };
-    }
+    // // Check 12-digit format with 91 prefix
+    // if (/^91[6-9]\d{9}$/.test(cleanPhone)) {
+    //   return { 
+    //     isValid: true, 
+    //     formatted: `+${cleanPhone}`,
+    //     numeric: cleanPhone // For database storage
+    //   };
+    // }
 
-    // Check 13-digit format with +91 prefix
-    if (/^\+91[6-9]\d{9}$/.test(phone)) {
-      const phoneWithoutplus = phone.replace('+', '');
-      return { 
-        isValid: true, 
-        formatted: phone,
-        numeric: parseInt(phoneWithoutplus) // For database storage
-      };
-    }
+    // // Check 13-digit format with +91 prefix
+    // if (/^\+91[6-9]\d{9}$/.test(phone)) {
+    //   const phoneWithoutplus = phone.replace('+', '');
+    //   return { 
+    //     isValid: true, 
+    //     formatted: phone,
+    //     numeric: parseInt(phoneWithoutplus) // For database storage
+    //   };
+    // }
 
     return { 
       isValid: false, 
-      message: 'Invalid Indian phone number format. Use 10 digits starting with 6-9' 
+      message: 'Invalid phone number format. Use 10 digits starting with 6-9' 
     };
   }
 
-  /**
-   * Validate name
-   */
   static validateName(name) {
     if (!name || typeof name !== 'string') {
       return { isValid: false, message: 'Name is required' };
@@ -71,9 +61,6 @@ class AuthService {
     return { isValid: true, cleaned: trimmedName };
   }
 
-  /**
-   * Validate email
-   */
   static validateEmail(email) {
     if (!email) {
       return { isValid: false, message: 'Email is required' };
@@ -88,9 +75,6 @@ class AuthService {
     return { isValid: true };
   }
 
-  /**
-   * Validate OTP
-   */
   static validateOTP(otp, expectedLength = 6) {
     if (!otp) {
       return { isValid: false, message: 'OTP is required' };
@@ -108,9 +92,6 @@ class AuthService {
     return { isValid: true, cleaned: cleanOTP };
   }
 
-  /**
-   * Check if user exists by phone number
-   */
 static async checkUserExists(credential, authType) {
     const column = authType === 'phone' ? 'phone' : 'email';
     
@@ -131,11 +112,6 @@ static async checkUserExists(credential, authType) {
   }
 
 
- 
-
-  /**
-   * Send OTP 
-   */
   static async sendOTP(phone) {
     try {
       const phoneValidation = this.validateIndianPhone(phone);
@@ -166,9 +142,6 @@ static async checkUserExists(credential, authType) {
     }
   }
 
-  /**
-   * Verify OTP and complete authentication
-   */
   static async verifyOTP(phone, token, ) {
     try {
       const phoneValidation = this.validateIndianPhone(phone);
@@ -208,9 +181,6 @@ static async checkUserExists(credential, authType) {
     }
   }
 
-  /**
-   * Sign out user
-   */
   static async signOut(token) {
     try {
       if (token) {
