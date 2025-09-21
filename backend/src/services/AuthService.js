@@ -9,34 +9,16 @@ class AuthService {
 
     const cleanPhone = phone.replace(/[^\d]/g, '');
 
-    // Check 10-digit format starting with 6-9
-    if (/^[6-9]\d{9}$/.test(cleanPhone)) {
+    console.log('Cleaned phone number:', cleanPhone);
+
+    // Check 12-digit format with 91 prefix
+    if (/^91[6-9]\d{9}$/.test(cleanPhone)) {
       return { 
         isValid: true, 
-        formatted: `+91${cleanPhone}`,
-        numeric: `91${cleanPhone}` // For database storage
+        formatted: `+${cleanPhone}`,
+        numeric: cleanPhone // For database storage
       };
     }
-
-    // // Check 12-digit format with 91 prefix
-    // if (/^91[6-9]\d{9}$/.test(cleanPhone)) {
-    //   return { 
-    //     isValid: true, 
-    //     formatted: `+${cleanPhone}`,
-    //     numeric: cleanPhone // For database storage
-    //   };
-    // }
-
-    // // Check 13-digit format with +91 prefix
-    // if (/^\+91[6-9]\d{9}$/.test(phone)) {
-    //   const phoneWithoutplus = phone.replace('+', '');
-    //   return { 
-    //     isValid: true, 
-    //     formatted: phone,
-    //     numeric: parseInt(phoneWithoutplus) // For database storage
-    //   };
-    // }
-
     return { 
       isValid: false, 
       message: 'Invalid phone number format. Use 10 digits starting with 6-9' 
@@ -115,6 +97,7 @@ static async checkUserExists(credential, authType) {
   static async sendOTP(phone) {
     try {
       const phoneValidation = this.validateIndianPhone(phone);
+      console.log('Phone validation result:', phoneValidation);
       if (!phoneValidation.isValid) {
         throw new Error(phoneValidation.message);
       }

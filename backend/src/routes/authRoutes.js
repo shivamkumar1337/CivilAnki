@@ -8,7 +8,6 @@ const router = express.Router();
 router.post('/otp', AuthController.sendOTP);
 router.post('/verify-otp', AuthController.verifyOTP);
 router.post('/check-user-exists', AuthController.checkUserExists);
-router.post('/refresh', AuthController.refreshToken);
 router.post('/signout', authMiddleware, AuthController.signOut);
 
 module.exports = router;

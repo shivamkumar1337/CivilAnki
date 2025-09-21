@@ -1,7 +1,9 @@
+// routes/progress.js
 const express = require("express");
 const { Router } = express;
 const { supabaseAnon } = require("../utils/supabaseClient");
 const { authMiddleware } = require('../middlewares/authMiddleware');
+const SpacedRepetitionService = require("../services/SpacedRepetitionService");
 const router = Router();
 
 // Helper function to apply filters conditionally
@@ -16,12 +18,12 @@ const applyFilters = (query, filters, tablePrefix = '') => {
   return query;
 };
 
-/* GET /progress?status=due|today|all|unattempted&subject_id=1&topic_id=52&exam_id=1&year=2023 */
+/* GET /progress?status=due|today|all|unattempted|learning|review&subject_id=1&topic_id=52&exam_id=1&year=2023 */
 router.get("/", authMiddleware, async (req, res, next) => {
   try {
     console.log("Query parameters:", req.query);
     const userId = req.user.id;
-    const { status, ...filters } = req.query;
+    const { status, limit = 50, ...filters } = req.query;
     let data;
 
     if (status === "all") {
@@ -35,19 +37,18 @@ router.get("/", authMiddleware, async (req, res, next) => {
           correct_option,
           year,
           subject_id,
-          topic_id
-        `);
+          topic_id,
+          exam_id,
+          image_url,
+          explaination,
+        `)
+        .limit(parseInt(limit));
 
-      // Apply filters using helper function
       query = applyFilters(query, filters);
       const { data: allQuestions, error } = await query;
 
-      if (error) {
-        console.error("Error fetching all questions:", error);
-        throw error;
-      }
+      if (error) throw error;
       
-      // Map the response to consistent format
       data = allQuestions.map(item => ({
         question_id: item.id,
         question_text: item.question_text,
@@ -55,11 +56,14 @@ router.get("/", authMiddleware, async (req, res, next) => {
         correct_option: item.correct_option,
         year: item.year,
         subject_id: item.subject_id,
-        topic_id: item.topic_id
+        topic_id: item.topic_id,
+        exam_id: item.exam_id,
+        image_url: item.image_url,
+        card_type: 'new'
       }));
 
-    } else if (status === "unattempted") {
-      // Get questions that are NOT in user_question_progress table but are in questions table
+    } else if (status === "unattempted" || status === "new") {
+      // Get questions that are NOT in user_question_progress table
       const { data: attemptedIds, error: attemptedError } = await supabaseAnon
         .from("user_question_progress")
         .select("question_id")
@@ -67,11 +71,8 @@ router.get("/", authMiddleware, async (req, res, next) => {
 
       if (attemptedError) throw attemptedError;
 
-      // Extract the IDs into an array
       const attemptedQuestionIds = attemptedIds.map(item => item.question_id);
-      console.log("Attempted question IDs:", attemptedQuestionIds);
 
-      // Build query for unattempted questions
       let query = supabaseAnon
         .from("questions")
         .select(`
@@ -81,25 +82,22 @@ router.get("/", authMiddleware, async (req, res, next) => {
           correct_option,
           year,
           subject_id,
-          topic_id
-        `);
+          topic_id,
+          exam_id,
+          image_url,
+          explaination
+        `)
+        .limit(parseInt(limit));
 
-      // Apply filters using helper function
       query = applyFilters(query, filters);
 
-      // If there are attempted questions, exclude them
       if (attemptedQuestionIds.length > 0) {
         query = query.not("id", "in", `(${attemptedQuestionIds.join(",")})`);
       }
 
       const { data: unattemptedData, error } = await query;
-
-      if (error) {
-        console.error("Error fetching unattempted questions:", error);
-        throw error;
-      }
+      if (error) throw error;
       
-      // Map the response to consistent format
       data = unattemptedData.map(item => ({
         question_id: item.id,
         question_text: item.question_text,
@@ -107,20 +105,32 @@ router.get("/", authMiddleware, async (req, res, next) => {
         correct_option: item.correct_option,
         year: item.year,
         subject_id: item.subject_id,
-        topic_id: item.topic_id
+        topic_id: item.topic_id,
+        exam_id: item.exam_id,
+        image_url: item.image_url,
+        explaination: item.explaination,
+        card_type: 'new'
       }));
 
     } else {
-      // Build query for attempted questions (due, today, or specific progress status)
+      // Build query for spaced repetition cards
       let q = supabaseAnon
         .from("user_question_progress")
         .select(`
           question_id, 
           attempts, 
           correct, 
-          review_interval, 
+          review_interval,
           next_review_at,
           last_attempt_at,
+          ease_factor,
+          interval_days,
+          repetitions,
+          quality,
+          card_type,
+          step_index,
+          graduated_at,
+          lapses,
           questions!inner(
             question_text, 
             options, 
@@ -128,27 +138,35 @@ router.get("/", authMiddleware, async (req, res, next) => {
             year,
             subject_id, 
             topic_id,
+            exam_id,
+            image_url,
+            explaination,
             topics!inner(name)
           )
         `)
-        .eq("user_id", userId);
+        .eq("user_id", userId)
+        .limit(parseInt(limit));
 
-      // Apply filters using helper function with table prefix
-      q = applyFilters(q, filters, 'questions');
+      query = applyFilters(q, filters, 'questions');
 
-      // Apply status filters
+      // Apply status filters for spaced repetition
       if (status === "due") {
         q = q.lte("next_review_at", new Date().toISOString());
       } else if (status === "today") {
-        const end = new Date();
-        end.setHours(23, 59, 59, 999);
-        q = q.lte("next_review_at", end.toISOString());
+        const endOfDay = new Date();
+        endOfDay.setHours(23, 59, 59, 999);
+        q = q.lte("next_review_at", endOfDay.toISOString());
+      } else if (status === "learning") {
+        q = q.eq("card_type", "learning");
+      } else if (status === "review") {
+        q = q.eq("card_type", "review");
+      } else if (status === "relearning") {
+        q = q.eq("card_type", "relearning");
       }
 
       const { data: progressData, error } = await q.order("next_review_at", { ascending: true });
       if (error) throw error;
 
-      // **FIXED: Transform the nested response to match consistent format**
       data = progressData.map(item => ({
         question_id: item.question_id,
         question_text: item.questions.question_text,
@@ -157,22 +175,36 @@ router.get("/", authMiddleware, async (req, res, next) => {
         year: item.questions.year,
         subject_id: item.questions.subject_id,
         topic_id: item.questions.topic_id,
-        // Include progress-specific fields for due/today status
+        exam_id: item.questions.exam_id,
+        image_url: item.questions.image_url,
+        explaination: item.questions.explaination,
+        // Spaced repetition fields
         attempts: item.attempts,
         correct: item.correct,
         review_interval: item.review_interval,
         next_review_at: item.next_review_at,
         last_attempt_at: item.last_attempt_at,
+        ease_factor: item.ease_factor,
+        interval_days: item.interval_days,
+        repetitions: item.repetitions,
+        quality: item.quality,
+        card_type: item.card_type || 'learning',
+        step_index: item.step_index,
+        graduated_at: item.graduated_at,
+        lapses: item.lapses,
         topic_name: item.questions.topics.name
       }));
     }
 
-    // Return data with count
+    // Get counts for dashboard
+    const counts = await getProgressCounts(userId);
+
     res.json({
       questions: data,
       count: data.length,
       status: status || 'all',
-      filters: filters
+      filters: filters,
+      counts: counts
     });
 
   } catch (e) {
@@ -181,42 +213,82 @@ router.get("/", authMiddleware, async (req, res, next) => {
   }
 });
 
-/* POST /progress - Upsert user progress */
+/* POST /progress - Submit answer and update spaced repetition */
 router.post("/", authMiddleware, async (req, res, next) => {
   try {
     const userId = req.user.id;
     if (!userId) throw { status: 401, message: "Invalid user" };
 
-    const { question_id, correct, review_interval, next_review_at } = req.body;
+    const { question_id, quality, time_taken } = req.body;
 
     // Validate required fields
-    if (!question_id || typeof correct !== 'boolean' || !review_interval || !next_review_at) {
+    if (!question_id || quality === undefined || quality < 0 || quality > 5) {
       throw { 
         status: 400, 
-        message: "Missing required fields: question_id, correct, review_interval, next_review_at" 
+        message: "Missing or invalid fields: question_id, quality (0-5)" 
       };
     }
 
-    // Use upsert to either insert new or update existing progress
-    const { data, error } = await supabaseAnon
+    // Get current progress if exists
+    const { data: currentProgress, error: fetchError } = await supabaseAnon
       .from("user_question_progress")
-      .upsert({
+      .select("*")
+      .eq("user_id", userId)
+      .eq("question_id", question_id)
+      .single();
+
+    if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 = no rows returned
+      throw fetchError;
+    }
+
+    // Get user's spaced repetition settings
+    const settings = await SpacedRepetitionService.getUserSettings(supabaseAnon, userId);
+
+    // Calculate next review using spaced repetition
+    const updatedProgress = SpacedRepetitionService.calculateNextReview(
+      currentProgress || {
         user_id: userId,
         question_id: question_id,
-        correct: correct,
-        review_interval: review_interval,
-        next_review_at: next_review_at,
-        last_attempt_at: new Date().toISOString(),
-        attempts: 1 // Will be incremented by trigger on conflict
+        attempts: 0,
+        card_type: 'learning',
+        step_index: 0,
+        repetitions: 0,
+        ease_factor: settings.startingEase,
+        interval_days: 1,
+        lapses: 0
+      },
+      quality,
+      settings
+    );
+
+    // Add additional fields
+    updatedProgress.user_id = userId;
+    updatedProgress.question_id = question_id;
+    updatedProgress.correct = quality >= 2; // Good or better
+    // updatedProgress.time_taken = time_taken;
+
+    // Upsert the progress
+    const { data, error } = await supabaseAnon
+      .from("user_question_progress")
+      .upsert(updatedProgress, {
+        onConflict: 'user_id,question_id'
       })
-      .select();
+      .select()
+      .single();
 
     if (error) throw error;
+
+    // Check if card is a leech
+    const isLeech = SpacedRepetitionService.isLeech(data, settings);
     
     res.json({
       success: true,
-      data: data[0],
-      message: "Progress saved successfully"
+      data: {
+        ...data,
+        is_leech: isLeech
+      },
+      message: "Progress saved successfully",
+      next_review_in_minutes: Math.round((new Date(data.next_review_at) - new Date()) / (1000 * 60))
     });
 
   } catch (e) {
@@ -225,7 +297,65 @@ router.post("/", authMiddleware, async (req, res, next) => {
   }
 });
 
-/* DELETE /progress/:questionId - Delete specific question progress */
+/* GET /progress/stats - Get user's progress statistics */
+router.get("/stats", authMiddleware, async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const counts = await getProgressCounts(userId);
+    
+    res.json({
+      success: true,
+      data: counts
+    });
+
+  } catch (e) {
+    console.error("GET /progress/stats error:", e);
+    next(e);
+  }
+});
+
+// Helper function to get progress counts
+async function getProgressCounts(userId) {
+  const now = new Date().toISOString();
+  const endOfDay = new Date();
+  endOfDay.setHours(23, 59, 59, 999);
+
+  const queries = await Promise.all([
+    // New cards (unattempted)
+    supabaseAnon.from("questions").select("id", { count: 'exact', head: true }),
+    supabaseAnon.from("user_question_progress").select("question_id", { count: 'exact', head: true }).eq("user_id", userId),
+    
+    // Learning cards
+    supabaseAnon.from("user_question_progress").select("*", { count: 'exact', head: true })
+      .eq("user_id", userId).eq("card_type", "learning"),
+    
+    // Review cards
+    supabaseAnon.from("user_question_progress").select("*", { count: 'exact', head: true })
+      .eq("user_id", userId).eq("card_type", "review"),
+    
+    // Due cards
+    supabaseAnon.from("user_question_progress").select("*", { count: 'exact', head: true })
+      .eq("user_id", userId).lte("next_review_at", now),
+    
+    // Today's cards
+    supabaseAnon.from("user_question_progress").select("*", { count: 'exact', head: true })
+      .eq("user_id", userId).lte("next_review_at", endOfDay.toISOString()),
+  ]);
+
+  const totalQuestions = queries[0].count || 0;
+  const attemptedQuestions = queries[1].count || 0;
+  
+  return {
+    new: totalQuestions - attemptedQuestions,
+    learning: queries[2].count || 0,
+    review: queries[3].count || 0,
+    due: queries[4].count || 0,
+    today: queries[5].count || 0,
+    total: totalQuestions
+  };
+}
+
+/* DELETE /progress/:questionId - Reset question progress */
 router.delete("/:questionId", authMiddleware, async (req, res, next) => {
   try {
     const userId = req.user.id;
@@ -249,7 +379,7 @@ router.delete("/:questionId", authMiddleware, async (req, res, next) => {
     res.json({
       success: true,
       data: data[0],
-      message: "Progress deleted successfully"
+      message: "Progress reset successfully"
     });
 
   } catch (e) {
