@@ -1,3 +1,4 @@
+// navigation/MainNavigator.tsx
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -5,9 +6,9 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MainStackParamList, HomeTabParamList } from './types';
 import { Home } from '../components/home/Home';
 import { QuestionHistory } from '../components/QuestionHistory';
-import { SubjectSelection } from '../components/SubjectSelection';
-import { SubTopicSelection } from '../components/SubTopicSelection';
-import { QuestionCard } from '../components/QuestionCard';
+import { SubjectScreen } from '../components/SubjectScreen';
+import { QuestionScreen } from '../components/QuestionScreen';
+// import { QuestionCard } from '../components/QuestionScreen';
 import { SessionSummary } from '../components/SessionSummary';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../constants/Colors';
@@ -65,16 +66,16 @@ const HomeTabs: React.FC = () => {
         component={Home}
         options={{ title: 'Search' }}
       />
-        <Tab.Screen 
-          name="Courses" 
-          component={Profile}
-          options={{ title: 'Courses' }}
-        />
       <Tab.Screen 
+        name="Courses" 
+        component={Profile}
+        options={{ title: 'Courses' }}
+      />
+      {/* <Tab.Screen 
         name="History" 
         component={QuestionHistory}
         options={{ title: 'History' }}
-      />
+      /> */}
     </Tab.Navigator>
   );
 };
@@ -88,12 +89,12 @@ const MainNavigator: React.FC = () => {
         initialRouteName="HomeTabs"
         screenOptions={{ headerShown: false }}
       >
-        <Stack.Screen name="Profile" component={Profile} />
         <Stack.Screen name="HomeTabs" component={HomeTabs} />
-        <Stack.Screen name="Subjects" component={SubjectSelection} />
-        <Stack.Screen name="SubTopics" component={SubTopicSelection} />
-        <Stack.Screen name="Practice" component={QuestionCard} />
-        <Stack.Screen name="Summary" component={SessionSummary} />
+        <Stack.Screen name="Profile" component={Profile} />
+        <Stack.Screen name="SubjectScreen" component={SubjectScreen} />
+        <Stack.Screen name="QuestionScreen" component={QuestionScreen} />
+        {/* <Stack.Screen name="Practice" component={QuestionCard} /> */}
+        {/* <Stack.Screen name="Summary" component={SessionSummary} /> */}
       </Stack.Navigator>
     </View>
   );
