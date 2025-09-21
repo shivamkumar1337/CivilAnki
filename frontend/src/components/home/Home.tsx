@@ -8,6 +8,7 @@ import { ProgressOverview } from './ProgressOverview';
 import { Colors } from '@/src/constants/Colors';
 import { SubjectCards } from './SubjectCards';
 import { fetchSubjects } from '@/src/store/slices/subjectsSlice';
+import { HomeService } from '@/src/services/HomeService';
 
 
 export const Home: React.FC = () => {
@@ -32,6 +33,21 @@ export const Home: React.FC = () => {
     console.log('Current subjects in Home:', currentSubjects);
   }, [staticSubjects, currentSubjects]);
 
+  useEffect(() => {
+  const fetchProgressStats = async () => {
+    try {
+      const stats = await HomeService.getProgressStats();
+      console.log('Progress stats:', stats);
+      // You can store this in Redux or local state
+    } catch (error) {
+      console.error('Error fetching progress stats:', error);
+    }
+  };
+
+  if (user.isAuthenticated) {
+    fetchProgressStats();
+  }
+}, [user.isAuthenticated]);
 
   // Show loading state
   if (isLoading) {

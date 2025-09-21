@@ -4,19 +4,20 @@ import {
   View,
   Text,
   StyleSheet,
+  SafeAreaView,
   ScrollView,
   TouchableOpacity,
-  Dimensions,
+  ActivityIndicator,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { MainStackParamList } from '../navigation/types';
-import { SubTopic } from '../types';
 import { Colors } from '../constants/Colors';
 import { HomeService } from '../services/HomeService';
-import { Ionicons } from '@expo/vector-icons';
-
-const { width } = Dimensions.get('window');
+import { Subject, SubTopic, ProgressStats } from '../types';
+import { Card } from './ui/Card';
+import { Badge } from './ui/Badge';
 
 type SubjectScreenRouteProp = RouteProp<MainStackParamList, 'SubjectScreen'>;
 type SubjectScreenNavigationProp = StackNavigationProp<MainStackParamList, 'SubjectScreen'>;
@@ -25,206 +26,385 @@ export const SubjectScreen: React.FC = () => {
   const navigation = useNavigation<SubjectScreenNavigationProp>();
   const route = useRoute<SubjectScreenRouteProp>();
   const { subject } = route.params;
+
   const [subTopics, setSubTopics] = useState<SubTopic[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [stats, setStats] = useState<ProgressStats>({
+    new: 0,
+    learning: 0,
+    review: 0,
+    due: 0,
+    today: 0,
+    total: 0
+  });
 
   useEffect(() => {
-    const fetchSubTopics = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        setError(null);
-        const data = await HomeService.getTopics(subject.id);
-        const transformedSubTopics = data.map((item: any) => ({
-          id: item.id.toString(),
-          name: item.name,
-          subject_id: item.subject_id,
-          created_at: item.created_at,
-        }));
-        setSubTopics(transformedSubTopics);
-      } catch (err) {
-        setError('Failed to load subtopics. Please try again.');
-        setSubTopics([]);
+        const [topicsResponse, statsResponse] = await Promise.all([
+          HomeService.getTopics(subject.id),
+          HomeService.getProgress({ subject_id: subject.id, status: 'all', limit: 1000 })
+        ]);
+
+        setSubTopics(topicsResponse);
+        
+        // Calculate stats from the response
+        const questions = statsResponse.questions || [];
+        const newStats = {
+          new: questions.filter((q: any) => q.card_type === 'new' || !q.card_type).length,
+          learning: questions.filter((q: any) => q.card_type === 'learning').length,
+          review: questions.filter((q: any) => q.card_type === 'review').length,
+          due: questions.filter((q: any) => {
+            if (!q.next_review_at) return false;
+            return new Date(q.next_review_at) <= new Date();
+          }).length,
+          today: questions.filter((q: any) => {
+            if (!q.next_review_at) return false;
+            const today = new Date();
+            today.setHours(23, 59, 59, 999);
+            return new Date(q.next_review_at) <= today;
+          }).length,
+          total: questions.length
+        };
+        setStats(newStats);
+
+      } catch (error) {
+        console.error('Error fetching subject data:', error);
+        setError('Failed to load subject data');
       } finally {
         setLoading(false);
       }
     };
-    fetchSubTopics();
+
+    fetchData();
   }, [subject.id]);
 
-  const handleSubTopicPress = (subTopic: SubTopic) => {
-    navigation.navigate('QuestionScreen', { subject, subTopic });
+  const handleStudyOption = (status: string, title: string) => {
+    navigation.navigate('QuestionScreen', {
+      subject,
+      questionParams: { 
+        status, 
+        subject_id: subject.id,
+        limit: 20 
+      }
+    });
   };
 
-  const handleBackPress = () => {
-    navigation.goBack();
-  };
-
-  const handleRetry = () => {
-    setError(null);
-    setLoading(true);
-    HomeService.getTopics(subject.id)
-      .then((data) => {
-        const transformedSubTopics = data.map((item: any) => ({
-          id: item.id.toString(),
-          name: item.name,
-          subject_id: item.subject_id,
-          created_at: item.created_at,
-        }));
-        setSubTopics(transformedSubTopics);
-      })
-      .catch(() => {
-        setError('Failed to load subtopics. Please try again.');
-        setSubTopics([]);
-      })
-      .finally(() => setLoading(false));
+  const handleTopicPress = (subTopic: SubTopic) => {
+    navigation.navigate('QuestionScreen', {
+      subject,
+      subTopic,
+      questionParams: {
+        status: 'due',
+        subject_id: subject.id,
+        topic_id: subTopic.id,
+        limit: 20
+      }
+    });
   };
 
   if (loading) {
     return (
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={handleBackPress} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color={Colors.primary} />
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <Ionicons name="chevron-back" size={24} color={Colors.light.foreground} />
           </TouchableOpacity>
-          <Text style={styles.title}>{subject.name}</Text>
+          <Text style={styles.headerTitle}>{subject.name}</Text>
         </View>
-        <View style={styles.centered}>
-          <Text style={styles.loadingText}>Loading subtopics...</Text>
+        <View style={styles.centeredContainer}>
+          <ActivityIndicator size="large" color={Colors.light.primary} />
+          <Text style={styles.loadingText}>Loading...</Text>
         </View>
-      </View>
+      </SafeAreaView>
     );
   }
 
   if (error) {
     return (
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={handleBackPress} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color={Colors.primary} />
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <Ionicons name="chevron-back" size={24} color={Colors.light.foreground} />
           </TouchableOpacity>
-          <Text style={styles.title}>{subject.name}</Text>
+          <Text style={styles.headerTitle}>{subject.name}</Text>
         </View>
-        <View style={styles.centered}>
+        <View style={styles.centeredContainer}>
           <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity onPress={handleRetry} style={styles.retryButton}>
-            <Text style={styles.retryText}>Retry</Text>
-          </TouchableOpacity>
         </View>
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={handleBackPress} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color={Colors.primary} />
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Ionicons name="chevron-back" size={24} color={Colors.light.foreground} />
         </TouchableOpacity>
-        <Text style={styles.title}>{subject.name}</Text>
+        <View style={styles.headerContent}>
+          <Text style={styles.headerTitle}>{subject.name}</Text>
+          <Text style={styles.headerSubtitle}>
+            {stats.total} total questions • {subTopics.length} topics
+          </Text>
+        </View>
       </View>
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {subTopics.length === 0 ? (
-          <View style={styles.centered}>
-            <Text style={styles.emptyText}>No subtopics available.</Text>
-          </View>
-        ) : (
-          subTopics.map((subTopic) => (
-            <TouchableOpacity
-              key={subTopic.id}
-              style={styles.subTopicItem}
-              onPress={() => handleSubTopicPress(subTopic)}
-              activeOpacity={0.7}
+
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Study Options */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Study Options</Text>
+          
+          {stats.due > 0 && (
+            <TouchableOpacity 
+              style={[styles.studyCard, styles.dueCard]}
+              onPress={() => handleStudyOption('due', 'Due for Review')}
             >
-              <Text style={styles.subTopicName}>{subTopic.name}</Text>
-              <Ionicons name="chevron-forward" size={20} color={Colors.muted} />
+              <View style={styles.studyCardContent}>
+                <View style={styles.studyCardLeft}>
+                  <Text style={styles.studyCardIcon}>⚡</Text>
+                  <View>
+                    <Text style={styles.studyCardTitle}>Due for Review</Text>
+                    <Text style={styles.studyCardSubtitle}>
+                      {stats.due} questions ready
+                    </Text>
+                  </View>
+                </View>
+                <Badge style={styles.dueBadge}>
+                  <Text style={styles.dueBadgeText}>{stats.due}</Text>
+                </Badge>
+              </View>
             </TouchableOpacity>
-          ))
-        )}
+          )}
+
+          <View style={styles.studyGrid}>
+            <TouchableOpacity 
+              style={styles.studyGridCard}
+              onPress={() => handleStudyOption('unattempted', 'Learn New')}
+            >
+              <Text style={styles.studyGridIcon}>✨</Text>
+              <Text style={styles.studyGridNumber}>{stats.new}</Text>
+              <Text style={styles.studyGridLabel}>New</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.studyGridCard}
+              onPress={() => handleStudyOption('learning', 'Continue Learning')}
+            >
+              <Text style={styles.studyGridIcon}>📚</Text>
+              <Text style={styles.studyGridNumber}>{stats.learning}</Text>
+              <Text style={styles.studyGridLabel}>Learning</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.studyGridCard}
+              onPress={() => handleStudyOption('review', 'Review')}
+            >
+              <Text style={styles.studyGridIcon}>🔄</Text>
+              <Text style={styles.studyGridNumber}>{stats.review}</Text>
+              <Text style={styles.studyGridLabel}>Review</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.studyGridCard}
+              onPress={() => handleStudyOption('today', 'Today\'s Cards')}
+            >
+              <Text style={styles.studyGridIcon}>📅</Text>
+              <Text style={styles.studyGridNumber}>{stats.today}</Text>
+              <Text style={styles.studyGridLabel}>Today</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Topics */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Topics</Text>
+          {subTopics.map((topic) => (
+            <TouchableOpacity
+              key={topic.id}
+              style={styles.topicCard}
+              onPress={() => handleTopicPress(topic)}
+            >
+              <View style={styles.topicContent}>
+                <View style={styles.topicLeft}>
+                  <Text style={styles.topicName}>{topic.name}</Text>
+                  <Text style={styles.topicMeta}>
+                    Topic {topic.id} • {subject.name}
+                  </Text>
+                </View>
+                <Ionicons 
+                  name="chevron-forward" 
+                  size={20} 
+                  color={Colors.light.mutedForeground} 
+                />
+              </View>
+            </TouchableOpacity>
+          ))}
+        </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f7fa', // soft light background for soothing effect
+    backgroundColor: Colors.light.background,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 16,
-    paddingHorizontal: 20,
-    backgroundColor: 'transparent',
+    paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#e2e8f0', // subtle border for definition
+    borderBottomColor: Colors.light.border,
+    backgroundColor: Colors.light.card,
   },
   backButton: {
-    marginRight: 16,
+    marginRight: 12,
   },
-  title: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#2c3e50', // dark shade for strong but soft heading
+  headerContent: {
     flex: 1,
   },
-  scrollContent: {
-    padding: 20,
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: Colors.light.foreground,
   },
-  subTopicItem: {
-    backgroundColor: 'white',
-    paddingVertical: 18,
-    paddingHorizontal: 16,
-    borderRadius: 10,
-    marginBottom: 14,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    // elevation: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.07,
-    shadowRadius: 3,
+  headerSubtitle: {
+    fontSize: 14,
+    color: Colors.light.mutedForeground,
+    marginTop: 2,
   },
-  subTopicName: {
-    fontSize: 16,
-    color: '#34495e',
-    fontWeight: '500',
+  content: {
+    flex: 1,
   },
-  centered: {
+  centeredContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 50,
+    padding: 20,
   },
   loadingText: {
+    marginTop: 16,
     fontSize: 16,
-    color: '#7f8c8d',
+    color: Colors.light.mutedForeground,
   },
   errorText: {
     fontSize: 16,
-    color: '#e74c3c',
+    color: Colors.light.error,
     textAlign: 'center',
-    marginBottom: 12,
-    paddingHorizontal: 10,
   },
-  retryButton: {
-    backgroundColor: '#2980b9',
-    paddingVertical: 12,
-    paddingHorizontal: 30,
-    borderRadius: 8,
+  section: {
+    padding: 16,
   },
-  retryText: {
-    color: 'white',
+  sectionTitle: {
+    fontSize: 18,
     fontWeight: '600',
-    fontSize: 16,
+    color: Colors.light.foreground,
+    marginBottom: 16,
   },
-  emptyText: {
+  studyCard: {
+    backgroundColor: Colors.light.card,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: Colors.light.border,
+  },
+  dueCard: {
+    backgroundColor: Colors.light.warning + '10',
+    borderColor: Colors.light.warning + '30',
+  },
+  studyCardContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  studyCardLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  studyCardIcon: {
+    fontSize: 24,
+    marginRight: 12,
+  },
+  studyCardTitle: {
     fontSize: 16,
-    color: '#95a5a6',
+    fontWeight: '600',
+    color: Colors.light.foreground,
+    marginBottom: 2,
+  },
+  studyCardSubtitle: {
+    fontSize: 14,
+    color: Colors.light.mutedForeground,
+  },
+  dueBadge: {
+    backgroundColor: Colors.light.warning,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  dueBadgeText: {
+    color: Colors.light.primaryForeground,
+    fontWeight: '600',
+  },
+  studyGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  studyGridCard: {
+    flex: 1,
+    minWidth: '45%',
+    backgroundColor: Colors.light.card,
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.light.border,
+  },
+  studyGridIcon: {
+    fontSize: 24,
+    marginBottom: 8,
+  },
+  studyGridNumber: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: Colors.light.foreground,
+    marginBottom: 4,
+  },
+  studyGridLabel: {
+    fontSize: 12,
+    color: Colors.light.mutedForeground,
+    fontWeight: '500',
+  },
+  topicCard: {
+    backgroundColor: Colors.light.card,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: Colors.light.border,
+  },
+  topicContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  topicLeft: {
+    flex: 1,
+  },
+  topicName: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: Colors.light.foreground,
+    marginBottom: 4,
+  },
+  topicMeta: {
+    fontSize: 14,
+    color: Colors.light.mutedForeground,
   },
 });

@@ -1,9 +1,9 @@
 // navigation/types.ts
 import { Subject, SubTopic, YearRange, SessionData, Question } from '../types';
 
-interface SubjectScreenProps {
-  subject: Subject;
-}
+// interface SubjectScreenProps {
+//   subject: Subject;
+// }
 
 export type RootStackParamList = {
   Auth: undefined;
@@ -29,15 +29,16 @@ export type MainStackParamList = {
   SubjectScreen: { 
     subject: Subject;
   };
-  QuestionScreen: { 
+  QuestionScreen: {
     subject?: Subject;
     subTopic?: SubTopic;
     questionParams?: {
-      status?: 'due' | 'today' | 'all' | 'unattempted';
-      subject_id?: number | null;
-      topic_id?: number | null;
-      exam_id?: number | null;
-      year?: number | null;
+      status?: string;
+      subject_id?: number;
+      topic_id?: number;
+      exam_id?: number;
+      year?: number;
+      limit?: number;
     };
   };
   SessionSummary: undefined;

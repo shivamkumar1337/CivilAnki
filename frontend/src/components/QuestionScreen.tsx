@@ -1,5 +1,4 @@
 // components/QuestionScreen.tsx
-
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -8,7 +7,8 @@ import {
   StyleSheet,
   ScrollView,
   SafeAreaView,
-  ActivityIndicator
+  ActivityIndicator,
+  Alert
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
@@ -16,45 +16,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { MainStackParamList } from '../navigation/types';
 import { Colors } from '../constants/Colors';
 import { HomeService } from '../services/HomeService';
-
-// Interfaces
-interface ApiQuestion {
-  question_id: number;
-  question_text: string;
-  options: {
-    "1": string;
-    "2": string;
-    "3": string;
-    "4": string;
-  };
-  correct_option: number;
-  year: number;
-  subject_id: number;
-  topic_id: number;
-}
-
-interface Question {
-  id: string;
-  question: string;
-  options: string[];
-  correctAnswer: number;
-  explanation?: string;
-  year: number;
-  question_id: number;
-}
-
-// Review intervals configuration - easily customizable from settings
-interface ReviewIntervals {
-  hard: number;     // minutes  
-  good: number;     // days
-  easy: number;     // days
-}
-
-const DEFAULT_INTERVALS: ReviewIntervals = {
-  hard: 21,     // 21 minutes
-  good: 1,      // 1 day
-  easy: 30      // 30 days
-};
+import { Question } from '../types';
 
 type QuestionScreenRouteProp = RouteProp<MainStackParamList, 'QuestionScreen'>;
 type QuestionScreenNavigationProp = StackNavigationProp<MainStackParamList, 'QuestionScreen'>;
@@ -67,69 +29,47 @@ export const QuestionScreen: React.FC = () => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [showResult, setShowResult] = useState(false);
-  const [showMarkingOptions, setShowMarkingOptions] = useState(false);
+  const [showQualityRating, setShowQualityRating] = useState(false);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updating, setUpdating] = useState(false);
-  const [againQuestions, setAgainQuestions] = useState<Question[]>([]); // Queue for "again" questions
-  
-  // This can be loaded from settings/preferences in future
-  const [reviewIntervals] = useState<ReviewIntervals>(DEFAULT_INTERVALS);
+  const [sessionStartTime] = useState(Date.now());
 
-  const transformQuestion = (apiQuestion: ApiQuestion): Question => {
+  const transformApiQuestion = (apiQuestion: any): Question => {
+    const options = Array.isArray(apiQuestion.options) 
+      ? apiQuestion.options 
+      : [
+          apiQuestion.options["1"],
+          apiQuestion.options["2"], 
+          apiQuestion.options["3"],
+          apiQuestion.options["4"]
+        ];
+
     return {
-      id: apiQuestion.question_id.toString(),
+      id: apiQuestion.question_id?.toString() || apiQuestion.id?.toString(),
+      question_id: apiQuestion.question_id || apiQuestion.id,
       question: apiQuestion.question_text,
-      options: [
-        apiQuestion.options["1"],
-        apiQuestion.options["2"],
-        apiQuestion.options["3"],
-        apiQuestion.options["4"]
-      ],
-      correctAnswer: apiQuestion.correct_option - 1,
+      question_text: apiQuestion.question_text,
+      options,
+      correctAnswer: (apiQuestion.correct_option || apiQuestion.correctAnswer) - 1,
+      correct_option: apiQuestion.correct_option || apiQuestion.correctAnswer,
       year: apiQuestion.year,
-      explanation: `This question is from ${apiQuestion.year}.`,
-      question_id: apiQuestion.question_id
+      subject_id: apiQuestion.subject_id,
+      topic_id: apiQuestion.topic_id,
+      exam_id: apiQuestion.exam_id,
+      image_url: apiQuestion.image_url,
+      explanation: apiQuestion.explanation || `This question is from ${apiQuestion.year}.`,
+      // Spaced repetition fields
+      card_type: apiQuestion.card_type || 'new',
+      ease_factor: apiQuestion.ease_factor,
+      interval_days: apiQuestion.interval_days,
+      repetitions: apiQuestion.repetitions,
+      next_review_at: apiQuestion.next_review_at,
+      attempts: apiQuestion.attempts,
+      lapses: apiQuestion.lapses,
+      topic_name: apiQuestion.topic_name
     };
-  };
-
-  const calculateNextReviewTime = (difficulty: keyof ReviewIntervals): string => {
-    const now = new Date();
-    
-    switch (difficulty) {
-      case 'hard':
-        // Add 21 minutes (or configured value)
-        now.setMinutes(now.getMinutes() + reviewIntervals.hard);
-        break;
-      case 'good':
-        // Next day
-        now.setDate(now.getDate() + reviewIntervals.good);
-        now.setHours(9, 0, 0, 0); // Set to 9 AM next day
-        break;
-      case 'easy':
-        // One month later (or configured days)
-        now.setDate(now.getDate() + reviewIntervals.easy);
-        now.setHours(9, 0, 0, 0); // Set to 9 AM
-        break;
-      default:
-        now.setDate(now.getDate() + 1);
-    }
-    
-    return now.toISOString();
-  };
-
-  const getReviewInterval = (difficulty: keyof ReviewIntervals): string => {
-    switch (difficulty) {
-      case 'hard':
-        return `${reviewIntervals.hard}m`;
-      case 'good':
-        return `${reviewIntervals.good}d`;
-      case 'easy':
-        return `${reviewIntervals.easy}d`;
-      default:
-        return '1d';
-    }
   };
 
   useEffect(() => {
@@ -145,7 +85,8 @@ export const QuestionScreen: React.FC = () => {
           params = {
             status: 'unattempted',
             subject_id: subject.id,
-            topic_id: subTopic.id
+            topic_id: subTopic.id,
+            limit: 20
           };
         } else {
           throw new Error('Invalid navigation parameters');
@@ -155,7 +96,7 @@ export const QuestionScreen: React.FC = () => {
         console.log('Fetched questions:', response);
 
         if (response.questions && response.count > 0) {
-          const transformedQuestions = response.questions.map(transformQuestion);
+          const transformedQuestions = response.questions.map(transformApiQuestion);
           setQuestions(transformedQuestions);
         } else {
           setError('No questions found for this selection.');
@@ -172,113 +113,84 @@ export const QuestionScreen: React.FC = () => {
   }, [subject, subTopic, questionParams]);
 
   const currentQuestion = questions[currentQuestionIndex];
-  const totalQuestions = questions.length + againQuestions.length;
-  const currentDisplayIndex = currentQuestionIndex + 1;
+  const totalQuestions = questions.length;
 
   const handleOptionSelect = (optionIndex: number) => {
+    if (showResult) return;
     setSelectedOption(optionIndex);
     setShowResult(true);
-    setShowMarkingOptions(true);
+    
+    // Show quality rating after a brief delay
+    setTimeout(() => {
+      setShowQualityRating(true);
+    }, 1000);
   };
 
-  const handleNextQuestion = () => {
-    // Check if there are "again" questions to show first
-    if (againQuestions.length > 0) {
-      // Move to the next "again" question
-      const nextAgainQuestion = againQuestions[0];
-      const remainingAgainQuestions = againQuestions.slice(1);
-      
-      // Add current question back to the main questions and move to "again" question
-      const updatedQuestions = [...questions];
-      updatedQuestions[currentQuestionIndex] = nextAgainQuestion;
-      
-      setQuestions(updatedQuestions);
-      setAgainQuestions(remainingAgainQuestions);
-      setSelectedOption(null);
-      setShowResult(false);
-      setShowMarkingOptions(false);
-      return;
-    }
-
-    // Normal flow - move to next question
-    if (currentQuestionIndex < questions.length - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
-      setSelectedOption(null);
-      setShowResult(false);
-      setShowMarkingOptions(false);
-    } else {
-      navigation.goBack();
-    }
-  };
-
-  const handleMarkQuestion = async (difficulty: 'again' | keyof ReviewIntervals) => {
-    if (!currentQuestion) return;
-
-    // Handle "again" separately - no API call, just add to queue
-    if (difficulty === 'again') {
-      setAgainQuestions(prev => [...prev, currentQuestion]);
-      setShowMarkingOptions(false);
-      
-      // Small delay for better UX
-      setTimeout(() => {
-        handleNextQuestion();
-      }, 300);
-      return;
-    }
-
-    // Handle other difficulties with API call
-    if (updating) return;
+  const handleQualityRating = async (quality: number) => {
+    if (!currentQuestion || updating) return;
 
     setUpdating(true);
     try {
-      const isCorrect = selectedOption === currentQuestion.correctAnswer;
-      const nextReviewTime = calculateNextReviewTime(difficulty);
-      const reviewInterval = getReviewInterval(difficulty);
-
-      await HomeService.updateProgress({
+      const timeSpent = Math.round((Date.now() - sessionStartTime) / 1000);
+      
+      await HomeService.submitAnswer({
         question_id: currentQuestion.question_id,
-        correct: isCorrect,
-        review_interval: reviewInterval,
-        next_review_at: nextReviewTime
+        quality: quality,
+        time_taken: timeSpent
       });
 
-      setShowMarkingOptions(false);
+      setShowQualityRating(false);
       
-      // Small delay for better UX
+      // Move to next question after a brief delay
       setTimeout(() => {
         handleNextQuestion();
-      }, 300);
+      }, 500);
     } catch (error) {
-      console.error('Failed to update progress:', error);
-      // Still proceed to next question even if API fails
-      setShowMarkingOptions(false);
-      setTimeout(() => {
-        handleNextQuestion();
-      }, 300);
+      console.error('Failed to submit answer:', error);
+      Alert.alert('Error', 'Failed to save progress. Continue anyway?', [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Continue', 
+          onPress: () => {
+            setShowQualityRating(false);
+            setTimeout(() => handleNextQuestion(), 500);
+          }
+        }
+      ]);
     } finally {
       setUpdating(false);
     }
   };
 
-  const handleRetry = () => {
-    setError(null);
-    setQuestions([]);
-    setAgainQuestions([]);
-    setCurrentQuestionIndex(0);
-    setSelectedOption(null);
-    setShowResult(false);
-    setShowMarkingOptions(false);
-    setUpdating(false);
+  const handleNextQuestion = () => {
+    if (currentQuestionIndex < questions.length - 1) {
+      setCurrentQuestionIndex(currentQuestionIndex + 1);
+      setSelectedOption(null);
+      setShowResult(false);
+      setShowQualityRating(false);
+    } else {
+      // Session complete
+      navigation.goBack();
+    }
   };
 
   const getScreenTitle = () => {
-    if (questionParams?.status === 'today') {
-      return "Today's Questions";
-    }
-    if (subTopic) {
-      return subTopic.name;
-    }
+    if (questionParams?.status === 'due') return "Due for Review";
+    if (questionParams?.status === 'today') return "Today's Questions";
+    if (questionParams?.status === 'learning') return "Learning";
+    if (questionParams?.status === 'review') return "Review";
+    if (subTopic) return subTopic.name;
     return "Questions";
+  };
+
+  const getCardTypeInfo = (cardType?: string) => {
+    switch (cardType) {
+      case 'new': return { icon: '✨', label: 'New', color: Colors.light.primary };
+      case 'learning': return { icon: '📚', label: 'Learning', color: Colors.light.warning };
+      case 'review': return { icon: '🔄', label: 'Review', color: Colors.light.success };
+      case 'relearning': return { icon: '🔁', label: 'Relearning', color: Colors.light.destructive };
+      default: return { icon: '❓', label: 'Unknown', color: Colors.light.mutedForeground };
+    }
   };
 
   if (loading) {
@@ -292,7 +204,7 @@ export const QuestionScreen: React.FC = () => {
         </View>
         <View style={styles.centeredContainer}>
           <ActivityIndicator size="large" color={Colors.light.primary} />
-          <Text style={styles.loadingText}>Loading...</Text>
+          <Text style={styles.loadingText}>Loading questions...</Text>
         </View>
       </SafeAreaView>
     );
@@ -309,8 +221,11 @@ export const QuestionScreen: React.FC = () => {
         </View>
         <View style={styles.centeredContainer}>
           <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity onPress={handleRetry} style={styles.retryButton}>
-            <Text style={styles.retryButtonText}>Retry</Text>
+          <TouchableOpacity 
+            onPress={() => navigation.goBack()} 
+            style={styles.retryButton}
+          >
+            <Text style={styles.retryButtonText}>Go Back</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -327,6 +242,8 @@ export const QuestionScreen: React.FC = () => {
     );
   }
 
+  const cardInfo = getCardTypeInfo(currentQuestion.card_type);
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -336,10 +253,13 @@ export const QuestionScreen: React.FC = () => {
         <View style={styles.headerContent}>
           <Text style={styles.headerTitle}>{getScreenTitle()}</Text>
           <Text style={styles.headerSubtitle}>
-            {currentDisplayIndex} of {totalQuestions}
-            {againQuestions.length > 0 && (
-              <Text style={styles.againIndicator}> • {againQuestions.length} to retry</Text>
-            )}
+            {currentQuestionIndex + 1} of {totalQuestions}
+          </Text>
+        </View>
+        <View style={[styles.cardTypeBadge, { backgroundColor: cardInfo.color + '20' }]}>
+          <Text style={styles.cardTypeIcon}>{cardInfo.icon}</Text>
+          <Text style={[styles.cardTypeText, { color: cardInfo.color }]}>
+            {cardInfo.label}
           </Text>
         </View>
       </View>
@@ -348,120 +268,123 @@ export const QuestionScreen: React.FC = () => {
         <View 
           style={[
             styles.progressBar, 
-            { width: `${(currentDisplayIndex / totalQuestions) * 100}%` }
+            { width: `${((currentQuestionIndex + 1) / totalQuestions) * 100}%` }
           ]} 
         />
       </View>
 
-      <View style={styles.contentContainer}>
-        <ScrollView 
-          style={styles.content} 
-          contentContainerStyle={styles.contentPadding}
-          showsVerticalScrollIndicator={false}
-        >
-          <View style={styles.questionContainer}>
-            <Text style={styles.questionNumber}>
-              Question {currentDisplayIndex} • Year {currentQuestion.year}
-            </Text>
-            <Text style={styles.questionText}>{currentQuestion.question}</Text>
+      <ScrollView 
+        style={styles.content} 
+        contentContainerStyle={styles.contentPadding}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.questionContainer}>
+          <View style={styles.questionMeta}>
+            <Text style={styles.questionNumber}>Question {currentQuestionIndex + 1}</Text>
+            <Text style={styles.questionYear}>Year {currentQuestion.year}</Text>
+            {currentQuestion.topic_name && (
+              <Text style={styles.topicName}>{currentQuestion.topic_name}</Text>
+            )}
           </View>
+          <Text style={styles.questionText}>{currentQuestion.question}</Text>
+        </View>
 
-          <View style={styles.optionsContainer}>
-            {currentQuestion.options.map((option, index) => (
-              <TouchableOpacity
-                key={index}
-                onPress={() => !showResult && handleOptionSelect(index)}
-                disabled={showResult}
-                style={[
-                  styles.optionButton,
+        <View style={styles.optionsContainer}>
+          {currentQuestion.options.map((option, index) => (
+            <TouchableOpacity
+              key={index}
+              onPress={() => handleOptionSelect(index)}
+              disabled={showResult}
+              style={[
+                styles.optionButton,
+                showResult
+                  ? index === currentQuestion.correctAnswer
+                    ? styles.correctOption
+                    : index === selectedOption && index !== currentQuestion.correctAnswer
+                    ? styles.wrongOption
+                    : styles.disabledOption
+                  : selectedOption === index
+                  ? styles.selectedOption
+                  : styles.defaultOption
+              ]}
+            >
+              <View style={styles.optionContent}>
+                <View style={[
+                  styles.optionLetter,
                   showResult
                     ? index === currentQuestion.correctAnswer
-                      ? styles.correctOption
+                      ? styles.correctOptionLetter
                       : index === selectedOption && index !== currentQuestion.correctAnswer
-                      ? styles.wrongOption
-                      : styles.disabledOption
+                      ? styles.wrongOptionLetter
+                      : styles.disabledOptionLetter
                     : selectedOption === index
-                    ? styles.selectedOption
-                    : styles.defaultOption
-                ]}
-              >
-                <View style={styles.optionContent}>
-                  <View style={[
-                    styles.optionLetter,
-                    showResult
-                      ? index === currentQuestion.correctAnswer
-                        ? styles.correctOptionLetter
-                        : index === selectedOption && index !== currentQuestion.correctAnswer
-                        ? styles.wrongOptionLetter
-                        : styles.disabledOptionLetter
-                      : selectedOption === index
-                      ? styles.selectedOptionLetter
-                      : styles.defaultOptionLetter
+                    ? styles.selectedOptionLetter
+                    : styles.defaultOptionLetter
+                ]}>
+                  <Text style={[
+                    styles.optionLetterText,
+                    (selectedOption === index || (showResult && index === currentQuestion.correctAnswer))
+                      ? { color: Colors.light.primaryForeground }
+                      : { color: Colors.light.mutedForeground }
                   ]}>
-                    <Text style={[
-                      styles.optionLetterText,
-                      (selectedOption === index || (showResult && index === currentQuestion.correctAnswer))
-                        ? { color: Colors.light.primaryForeground }
-                        : { color: Colors.light.mutedForeground }
-                    ]}>
-                      {String.fromCharCode(65 + index)}
-                    </Text>
-                  </View>
-                  <Text style={styles.optionText}>{option}</Text>
+                    {String.fromCharCode(65 + index)}
+                  </Text>
                 </View>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          {showResult && currentQuestion.explanation && (
-            <View style={styles.explanationContainer}>
-              <View style={styles.explanationHeader}>
-                <Ionicons name="bulb-outline" size={16} color={Colors.light.primary} />
-                <Text style={styles.explanationTitle}>Explanation</Text>
+                <Text style={styles.optionText}>{option}</Text>
               </View>
-              <Text style={styles.explanationText}>{currentQuestion.explanation}</Text>
-            </View>
-          )}
-        </ScrollView>
+            </TouchableOpacity>
+          ))}
+        </View>
 
-        {showMarkingOptions && (
+        {showResult && currentQuestion.explanation && (
+          <View style={styles.explanationContainer}>
+            <View style={styles.explanationHeader}>
+              <Ionicons name="bulb-outline" size={16} color={Colors.light.primary} />
+              <Text style={styles.explanationTitle}>Explanation</Text>
+            </View>
+            <Text style={styles.explanationText}>{currentQuestion.explanation}</Text>
+          </View>
+        )}
+      </ScrollView>
+
+      {showQualityRating && (
           <View style={styles.markingContainer}>
             <Text style={styles.markingTitle}>How would you rate this question?</Text>
             <View style={styles.markingButtons}>
               <TouchableOpacity
-                onPress={() => handleMarkQuestion('again')}
+                onPress={() => handleQualityRating(0)}
                 style={[styles.markingButton, styles.againButton]}
               >
                 <Ionicons name="refresh" size={16} color="#ef4444" />
                 <Text style={styles.againText}>Again</Text>
-                <Text style={styles.intervalText}>Now</Text>
+                {/* <Text style={styles.intervalText}>Now</Text> */}
               </TouchableOpacity>
               <TouchableOpacity
-                onPress={() => handleMarkQuestion('hard')}
+                onPress={() => handleQualityRating(1)}
                 disabled={updating}
                 style={[styles.markingButton, styles.hardButton, updating && styles.disabledButton]}
               >
                 <Ionicons name="flame" size={16} color="#f97316" />
                 <Text style={styles.hardText}>Hard</Text>
-                <Text style={styles.intervalText}>{reviewIntervals.hard}m</Text>
+                {/* <Text style={styles.intervalText}></Text> */}
               </TouchableOpacity>
               <TouchableOpacity
-                onPress={() => handleMarkQuestion('good')}
+                onPress={() => handleQualityRating(2)}
                 disabled={updating}
                 style={[styles.markingButton, styles.goodButton, updating && styles.disabledButton]}
               >
                 <Ionicons name="thumbs-up" size={16} color="#3b82f6" />
                 <Text style={styles.goodText}>Good</Text>
-                <Text style={styles.intervalText}>{reviewIntervals.good}d</Text>
+                {/* <Text style={styles.intervalText}>{reviewIntervals.good}d</Text> */}
               </TouchableOpacity>
               <TouchableOpacity
-                onPress={() => handleMarkQuestion('easy')}
+                onPress={() => handleQualityRating(3)}
                 disabled={updating}
                 style={[styles.markingButton, styles.easyButton, updating && styles.disabledButton]}
               >
                 <Ionicons name="checkmark-circle" size={16} color="#22c55e" />
                 <Text style={styles.easyText}>Easy</Text>
-                <Text style={styles.intervalText}>{reviewIntervals.easy}d</Text>
+                {/* <Text style={styles.intervalText}>{reviewIntervals.easy}d</Text> */}
               </TouchableOpacity>
             </View>
             {updating && (
@@ -472,17 +395,7 @@ export const QuestionScreen: React.FC = () => {
             )}
           </View>
         )}
-
-        {showResult && !showMarkingOptions && (
-          <View style={styles.continueContainer}>
-            <TouchableOpacity onPress={handleNextQuestion} style={styles.continueButton}>
-              <Text style={styles.continueButtonText}>
-                {(currentQuestionIndex < questions.length - 1) || againQuestions.length > 0 ? 'Next Question' : 'Complete'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        )}
-      </View>
+      
     </SafeAreaView>
   );
 };
@@ -517,9 +430,20 @@ const styles = StyleSheet.create({
     color: Colors.light.mutedForeground,
     marginTop: 2,
   },
-  againIndicator: {
-    color: '#ef4444',
-    fontWeight: '500',
+  cardTypeBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+  },
+  cardTypeIcon: {
+    fontSize: 12,
+  },
+  cardTypeText: {
+    fontSize: 12,
+    fontWeight: '600',
   },
   progressContainer: {
     height: 4,
@@ -528,9 +452,6 @@ const styles = StyleSheet.create({
   progressBar: {
     height: '100%',
     backgroundColor: Colors.light.primary,
-  },
-  contentContainer: {
-    flex: 1,
   },
   content: {
     flex: 1,
@@ -552,7 +473,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 16,
-    color: '#ef4444',
+    color: Colors.light.error,
     textAlign: 'center',
     marginBottom: 16,
   },
@@ -570,10 +491,25 @@ const styles = StyleSheet.create({
   questionContainer: {
     marginBottom: 24,
   },
+  questionMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    gap: 12,
+  },
   questionNumber: {
     fontSize: 14,
     color: Colors.light.mutedForeground,
-    marginBottom: 8,
+    fontWeight: '500',
+  },
+  questionYear: {
+    fontSize: 14,
+    color: Colors.light.mutedForeground,
+  },
+  topicName: {
+    fontSize: 14,
+    color: Colors.light.primary,
+    fontWeight: '500',
   },
   questionText: {
     fontSize: 16,
@@ -598,12 +534,12 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.light.accent,
   },
   correctOption: {
-    borderColor: '#22c55e',
-    backgroundColor: '#dcfce7',
+    borderColor: Colors.light.success,
+    backgroundColor: Colors.light.success + '20',
   },
   wrongOption: {
-    borderColor: '#ef4444',
-    backgroundColor: '#fee2e2',
+    borderColor: Colors.light.error,
+    backgroundColor: Colors.light.error + '20',
   },
   disabledOption: {
     borderColor: Colors.light.border,
@@ -631,12 +567,12 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.light.primary,
   },
   correctOptionLetter: {
-    borderColor: '#22c55e',
-    backgroundColor: '#22c55e',
+    borderColor: Colors.light.success,
+    backgroundColor: Colors.light.success,
   },
   wrongOptionLetter: {
-    borderColor: '#ef4444',
-    backgroundColor: '#ef4444',
+    borderColor: Colors.light.error,
+    backgroundColor: Colors.light.error,
   },
   disabledOptionLetter: {
     borderColor: Colors.light.mutedForeground,
@@ -675,6 +611,78 @@ const styles = StyleSheet.create({
     color: Colors.light.primary,
     lineHeight: 20,
   },
+  qualityContainer: {
+    backgroundColor: Colors.light.card,
+    borderTopWidth: 1,
+    borderTopColor: Colors.light.border,
+    padding: 16,
+  },
+  qualityTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.light.foreground,
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  qualitySubtitle: {
+    fontSize: 14,
+    color: Colors.light.mutedForeground,
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  qualityButtons: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  qualityButton: {
+    flex: 1,
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  againButton: {
+    borderColor: Colors.light.error + '40',
+    backgroundColor: Colors.light.error + '10',
+  },
+  hardButton: {
+    borderColor: Colors.light.warning + '40',
+    backgroundColor: Colors.light.warning + '10',
+  },
+  goodButton: {
+    borderColor: Colors.light.primary + '40',
+    backgroundColor: Colors.light.primary + '10',
+  },
+  easyButton: {
+    borderColor: Colors.light.success + '40',
+    backgroundColor: Colors.light.success + '10',
+  },
+  qualityIcon: {
+    fontSize: 20,
+    marginBottom: 4,
+  },
+  qualityLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: Colors.light.foreground,
+    marginBottom: 2,
+  },
+  qualityDescription: {
+    fontSize: 10,
+    color: Colors.light.mutedForeground,
+    textAlign: 'center',
+  },
+  updatingIndicator: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  updatingText: {
+    fontSize: 14,
+    color: Colors.light.mutedForeground,
+    marginLeft: 8,
+  },
   markingContainer: {
     borderTopWidth: 1,
     borderTopColor: Colors.light.border,
@@ -702,22 +710,22 @@ const styles = StyleSheet.create({
   disabledButton: {
     opacity: 0.5,
   },
-  againButton: {
-    borderColor: '#fecaca',
-    backgroundColor: '#fef2f2',
-  },
-  hardButton: {
-    borderColor: '#fed7aa',
-    backgroundColor: '#fff7ed',
-  },
-  goodButton: {
-    borderColor: '#bfdbfe',
-    backgroundColor: '#eff6ff',
-  },
-  easyButton: {
-    borderColor: '#bbf7d0',
-    backgroundColor: '#f0fdf4',
-  },
+  // againButton: {
+  //   borderColor: '#fecaca',
+  //   backgroundColor: '#fef2f2',
+  // },
+  // hardButton: {
+  //   borderColor: '#fed7aa',
+  //   backgroundColor: '#fff7ed',
+  // },
+  // goodButton: {
+  //   borderColor: '#bfdbfe',
+  //   backgroundColor: '#eff6ff',
+  // },
+  // easyButton: {
+  //   borderColor: '#bbf7d0',
+  //   backgroundColor: '#f0fdf4',
+  // },
   againText: {
     fontSize: 12,
     color: '#ef4444',
@@ -747,32 +755,15 @@ const styles = StyleSheet.create({
     color: Colors.light.mutedForeground,
     marginTop: 2,
   },
-  updatingIndicator: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 12,
-  },
-  updatingText: {
-    fontSize: 12,
-    color: Colors.light.mutedForeground,
-    marginLeft: 8,
-  },
-  continueContainer: {
-    borderTopWidth: 1,
-    borderTopColor: Colors.light.border,
-    backgroundColor: Colors.light.card,
-    padding: 16,
-  },
-  continueButton: {
-    backgroundColor: Colors.light.primary,
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  continueButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: Colors.light.primaryForeground,
-  },
+  // updatingIndicator: {
+  //   flexDirection: 'row',
+  //   justifyContent: 'center',
+  //   alignItems: 'center',
+  //   marginTop: 12,
+  // },
+  // updatingText: {
+  //   fontSize: 12,
+  //   color: Colors.light.mutedForeground,
+  //   marginLeft: 8,
+  // },
 });
