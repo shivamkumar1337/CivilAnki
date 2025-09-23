@@ -79,14 +79,11 @@ useEffect(() => {
         onPress={handleProfilePress}
         activeOpacity={0.7}
       >
-        <LinearGradient
-          colors={[Colors.light.primary + '15', Colors.light.primary + '08']}
-          style={styles.avatar}
-        >
+        <View style={[styles.avatar, { backgroundColor: Colors.light.primary }]}>
           <Text style={styles.avatarText}>
             {user.avatar_url ? user.avatar_url : getAvatarText(user.name || '')}
           </Text>
-        </LinearGradient>
+          </View>
         <View style={styles.greetingSection}>
           <Text style={styles.greeting}>  
             {`Hi, ${user.name || 'User'}`}
@@ -101,12 +98,12 @@ useEffect(() => {
       
       <View style={styles.actions}>
         <View style={styles.streakBadge}>
-          <Ionicons name="flame" size={14} color="#FF6B35" />
+          <Ionicons name="flame" size={20} color="#FF6B35" />
           <Text style={styles.streakText}>{user.streak || 0}</Text>
         </View>
-        <TouchableOpacity style={styles.notificationButton} onPress={onNotificationPress}>
+        {/* <TouchableOpacity style={styles.notificationButton} onPress={onNotificationPress}>
           <Ionicons name="notifications-outline" size={18} color={Colors.light.foreground} />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
     </View>
   );
@@ -136,6 +133,7 @@ const styles = StyleSheet.create({
   avatarText: {
     fontSize: 18,
     fontWeight: '600',
+    color: '#fff',
   },
   greetingSection: {
     flex: 1,

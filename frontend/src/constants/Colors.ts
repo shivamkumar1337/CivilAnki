@@ -5,7 +5,7 @@ export const Colors = {
     foreground: '#1F2937',
     card: '#FFFFFF',
     cardBorder: '#E5E7EB',
-    primary: '#1048c0ff',
+    primary: '#3872f0ff',
     primaryForeground: '#FFFFFF',
     secondary: '#F3F4F6',
     secondaryForeground: '#374151',

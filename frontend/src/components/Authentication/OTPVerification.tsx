@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, TextInput, Platform, StatusBar, ScrollView, Keyboard } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, TextInput, Platform, StatusBar, ScrollView} from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/Colors';
@@ -35,21 +35,6 @@ export function OTPVerification() {
   const inputRefs = useRef<TextInput[]>([]);
   const timerRef = useRef<number | null>(null);
 
-  // Handle keyboard visibility
-  useEffect(() => {
-    const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
-      setKeyboardVisible(true);
-    });
-    const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
-      setKeyboardVisible(false);
-    });
-
-    return () => {
-      keyboardDidShowListener?.remove();
-      keyboardDidHideListener?.remove();
-    };
-  }, []);
-
 // In your existing OTPVerification.tsx file, update the handleVerify function:
 const handleVerify = async () => {
   const otpString = otp.join('');
@@ -62,13 +47,12 @@ const handleVerify = async () => {
     const { success, user, error, session, isLogin } = await authService.verifyOTP(mobile, otpString);
     if (!success) throw new Error(error);
     console.log('Verified user:', session);
-  Keyboard.dismiss();
 
     // Add user data to Redux store
     dispatch(setUser({
       id: user?.id || '',
       name: user?.name || '',
-      mobile: user?.phone || '',
+      phone: user?.phone || '',
       email: user?.email || '',
       isAuthenticated: isLogin,
       session: session,
@@ -162,7 +146,7 @@ const handleVerify = async () => {
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={22} color={Colors.light.foreground} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Verify OTP</Text>
+        <Text style={styles.headerTitle}>Enter verification code</Text>
         <View style={{ width: 36 }} />
       </View>
 
@@ -171,22 +155,14 @@ const handleVerify = async () => {
         style={styles.scrollView}
         contentContainerStyle={[
           styles.scrollContent,
-          keyboardVisible && styles.scrollContentKeyboard
         ]}
         showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
+        // keyboardShouldPersistTaps="handled"
         bounces={false}
       >
         {/* Logo and instruction */}
         <View style={styles.logoSection}>
-          <LinearGradient
-            colors={[Colors.light.primary + '20', Colors.light.primary + '10']}
-            style={styles.logoBox}
-          >
-            <Ionicons name="mail" size={32} color={Colors.light.primary} />
-          </LinearGradient>
-          <Text style={styles.verifyTitle}>Enter verification code</Text>
-          <Text style={styles.verifySubtitle}>
+           <Text style={styles.verifySubtitle}>
             We've sent a 6-digit code to{'\n'}
             <Text style={styles.mobileText}>{formatMobile(mobile)}</Text>
           </Text>
@@ -252,7 +228,6 @@ const handleVerify = async () => {
       {/* Verify Button - Always visible */}
       <View style={[
         styles.bottomSection,
-        keyboardVisible && styles.bottomSectionKeyboard
       ]}>
         <TouchableOpacity
           style={[
@@ -307,8 +282,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingTop: 50,
-    paddingBottom: 16,
+    paddingTop: 16,
+    paddingBottom: 50,
     backgroundColor: Colors.light.background,
   },
   backButton: {

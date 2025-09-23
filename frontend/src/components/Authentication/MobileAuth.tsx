@@ -4,8 +4,6 @@ import {
   Text, 
   TextInput, 
   TouchableOpacity, 
-  KeyboardAvoidingView, 
-  Platform, 
   StyleSheet, 
   StatusBar, 
   ScrollView 
@@ -15,7 +13,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/Colors';
 import { authService } from '../../services/AuthService';
 import { useNavigation } from '@react-navigation/native';
-import { useDispatch } from 'react-redux';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { AuthStackParamList } from '../../navigation/types';
 import { LoadingSpinner } from '../common/LoadingSpinner';
@@ -30,42 +27,23 @@ export function MobileAuth() {
   const [error, setError] = useState('');
 
   const navigation = useNavigation<MobileAuthNavigationProp>();
-  const dispatch = useDispatch();
 
-  // Debug logging whenever state changes
   useEffect(() => {
-    console.log('State update:', { mobile, isValid, mobileLength: mobile.length });
-  }, [mobile, isValid]);
+    validateForm(mobile);
+  }, [mobile]);
 
   const handleMobileChange = (value: string) => {
-    console.log('handleMobileChange called with:', value);
-    
-    // Remove non-digits and limit to 10
-    const digits = value.replace(/\D/g, '').slice(0, 10);
-    console.log('Cleaned digits:', digits);
-    
+    const digits = value.replace(/\D/g, '').slice(0, 10);    
     setMobile(digits);
-    
-    // Validate immediately
-    const isValidNumber = validateForm(digits);
-    console.log('Validation result:', isValidNumber);
-    
-    // Clear error when user starts typing
     if (error) setError('');
   };
 
   const validateForm = (mobileValue: string) => {
-    console.log('validateForm called with:', mobileValue);
-    
     const isMobileValid = mobileValue.length === 10 && ['6','7','8','9'].includes(mobileValue[0]);
-    console.log('Validation details:', {
-      length: mobileValue.length,
-      lengthValid: mobileValue.length === 10,
-      firstDigit: mobileValue[0],
-      firstDigitValid: ['6','7','8','9'].includes(mobileValue[0]),
-      finalResult: isMobileValid
-    });
-    
+
+    if (!isMobileValid && mobileValue.length === 10) {
+      setError('Please enter a valid 10-digit mobile number.');
+    }
     setIsValid(isMobileValid);
     return isMobileValid;
   };
@@ -100,43 +78,30 @@ const handleContinue = async () => {
 
   // Debug: Log button state
   const buttonDisabled = !isValid || isLoading;
-  console.log('Button state:', { isValid, isLoading, buttonDisabled });
+  // console.log('Button state:', { isValid, isLoading, buttonDisabled });
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={Colors.light.background} />
       
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={22} color={Colors.light.foreground} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Mobile Number</Text>
+        <Text style={styles.headerTitle}>Enter your mobile number</Text>
         <View style={{ width: 40 }} />
       </View>
 
-      <KeyboardAvoidingView
-        style={styles.keyboardAvoidingView}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
-      >
         <ScrollView 
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-
-          {/* Logo Section */}
+{/* 
           <View style={styles.logoSection}>
-            {/* <LinearGradient
-              colors={[Colors.light.primary + '20', Colors.light.primary + '10']}
-              style={styles.logoBox}
-            >
-              <Ionicons name="phone-portrait" size={28} color={Colors.light.primary} />
-            </LinearGradient> */}
             <Text style={styles.title}>Enter your mobile number</Text>
-          </View>
+          </View> */}
 
           {/* Error Display */}
           {error ? (
@@ -149,7 +114,7 @@ const handleContinue = async () => {
           {/* Mobile Input Section */}
           <View style={styles.inputSection}>
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Mobile Number</Text>
+              {/* <Text style={styles.inputLabel}>Mobile Number</Text> */}
               <View style={[
                 styles.inputContainer,
                 isValid && styles.inputContainerValid
@@ -220,14 +185,12 @@ const handleContinue = async () => {
               </View>
             </LinearGradient>
           </TouchableOpacity>
-          
           <Text style={styles.privacyText}>
             By continuing, you agree to our{' '}
             <Text style={styles.linkText}>Terms of Service</Text> and{' '}
             <Text style={styles.linkText}>Privacy Policy</Text>
           </Text>
         </View>
-      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -254,8 +217,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingTop: 50,
-    paddingBottom: 16,
+    paddingTop: 16,
+    paddingBottom: 50,
     backgroundColor: Colors.light.background,
   },
   backButton: {

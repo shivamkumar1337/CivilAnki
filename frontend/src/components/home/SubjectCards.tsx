@@ -30,13 +30,13 @@ export const SubjectCards: React.FC<SubjectCardsProps> = ({ subjects }) => {
   }
 
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16 }}>
+    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
       {subjects.map((subject, index) => (
         <TouchableOpacity
           key={subject.id ?? subject.name ?? index}
           onPress={() => onSubjectPress(subject)}
           style={{
-            marginRight: 16,
+            marginRight: 12,
             alignItems: 'center',
             width: 128,
           }}
@@ -44,8 +44,8 @@ export const SubjectCards: React.FC<SubjectCardsProps> = ({ subjects }) => {
         >
           <View
             style={{
-              aspectRatio: 9 / 15,
-              width: 128,
+              aspectRatio: 9 / 12,
+              width: 108,
               marginBottom: 12,
               borderRadius: 12,
               borderWidth: 1,

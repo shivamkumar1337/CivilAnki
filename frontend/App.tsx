@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, SafeAreaView } from 'react-native';
+import { StyleSheet, SafeAreaView, StatusBar } from 'react-native';
 import { Provider, useDispatch } from 'react-redux';
 import { store } from './src/store';
 import AppNavigator from './src/navigation/AppNavigator';
@@ -47,6 +47,7 @@ export default function App() {
   return (
     <SafeAreaProvider initialMetrics={initialWindowMetrics}>
     <Provider store={store}>
+      <StatusBar barStyle="dark-content" backgroundColor={Colors.light.background} />
       <AppNavigator />
     </Provider>
     </SafeAreaProvider>

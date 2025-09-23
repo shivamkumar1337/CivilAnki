@@ -63,33 +63,35 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
 
   return (
     <View style={styles.container}>
-      <View style={styles.grid}>
-        {actions.map((action) => (
-          <TouchableOpacity
-            key={action.id}
-            style={styles.actionCard}
-            onPress={action.onPress}
-            activeOpacity={0.8}
-          >
-            <LinearGradient
-              colors={action.gradient}
-              style={styles.actionGradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-            >
-              <View style={styles.actionContent}>
-                <Ionicons 
-                  name={action.icon} 
-                  size={32} 
-                  color={Colors.light.primaryForeground} 
-                />
-                <Text style={styles.actionTitle}>{action.title}</Text>
-                <Text style={styles.actionSubtitle}>{action.subtitle}</Text>
+      {/* Quick Actions */}
+              <View style={styles.quickActions}>
+                <Text style={styles.quickActionsTitle}>Quick Start</Text>
+                <View style={styles.actionButtons}>
+                  <TouchableOpacity 
+                    style={[styles.actionButton, styles.dueButton]}
+                    onPress={() => handleQuickAction('due')}
+                  >
+                    <Ionicons name="flash" size={16} color={Colors.light.warning} />
+                    <Text style={styles.actionButtonText}>Due</Text>
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity 
+                    style={[styles.actionButton, styles.newButton]}
+                    onPress={() => handleQuickAction('unattempted')}
+                  >
+                    <Ionicons name="add-circle" size={16} color={Colors.light.primary} />
+                    <Text style={styles.actionButtonText}>New</Text>
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity 
+                    style={[styles.actionButton, styles.reviewButton]}
+                    onPress={() => handleQuickAction('review')}
+                  >
+                    <Ionicons name="refresh" size={16} color={Colors.light.success} />
+                    <Text style={styles.actionButtonText}>Review</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
-            </LinearGradient>
-          </TouchableOpacity>
-        ))}
-      </View>
     </View>
   );
 };
