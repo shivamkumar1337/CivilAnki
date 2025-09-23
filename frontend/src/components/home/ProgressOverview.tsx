@@ -1,9 +1,9 @@
-// src/components/home/ProgressOverview.tsx
+// pages/impl/ProgressOverviewPage.tsx
 import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/src/constants/Colors';
-import { HomeService, ProgressStats } from '@/src/services/HomeService';
+import { HomeService } from '@/src/services/HomeService';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { MainStackParamList } from '@/src/navigation/types';
@@ -16,7 +16,7 @@ interface ProgressOverviewProps {
 
 export const ProgressOverview: React.FC<ProgressOverviewProps> = ({ onViewDetails }) => {
   const navigation = useNavigation<HomeNavigationProp>();
-  const [stats, setStats] = useState<ProgressStats>({
+  const [stats, setStats] = useState({
     overallProgress: 0,
     totalMastered: 0,
     totalQuestions: 0,
@@ -25,21 +25,43 @@ export const ProgressOverview: React.FC<ProgressOverviewProps> = ({ onViewDetail
   });
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadProgressStats();
-  }, []);
+  // Map the API response to the stats shape expected by the component
+  const mapProgressStats = (apiData: any) => {
+    const { new: newCards, learning, review, due, today, total } = apiData;
+    const totalQuestions = total;
+    const totalMastered = due;
+    const todayCompleted = today;
+    const todayTarget = newCards + learning + review + today;
+    const overallProgress = total > 0 ? Math.round((totalMastered / total) * 100) : 0;
+
+    return {
+      overallProgress,
+      totalMastered,
+      totalQuestions,
+      todayCompleted,
+      todayTarget
+    };
+  };
 
   const loadProgressStats = async () => {
     try {
       setLoading(true);
+      // Fetch original API data
       const progressStats = await HomeService.getProgressStats();
-      setStats(progressStats);
+      // Map the API data to component-expected stats
+      const mappedStats = mapProgressStats(progressStats.data);
+      setStats(mappedStats);
+      console.log('Mapped progress stats:', mappedStats);
     } catch (error) {
       console.error('Error loading progress stats:', error);
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadProgressStats();
+  }, []);
 
   const handleTodayGoalPress = () => {
     navigation.navigate('QuestionScreen', {
@@ -74,7 +96,7 @@ export const ProgressOverview: React.FC<ProgressOverviewProps> = ({ onViewDetail
           </TouchableOpacity>
         </View>
 
-        {/* Today's Goal Section - NOW AT TOP */}
+        {/* Today's Goal Section */}
         <TouchableOpacity 
           style={styles.todaySection}
           onPress={handleTodayGoalPress}
@@ -105,7 +127,7 @@ export const ProgressOverview: React.FC<ProgressOverviewProps> = ({ onViewDetail
           </View>
         </TouchableOpacity>
 
-        {/* Overall Progress Section - NOW AT BOTTOM */}
+        {/* Overall Progress Section */}
         <View style={styles.overallSection}>
           <View style={styles.progressRow}>
             <View style={styles.progressTextContainer}>
@@ -177,11 +199,10 @@ const styles = StyleSheet.create({
   headerButton: {
     padding: 2,
   },
-  // Today's Section - Updated styles for top position
   todaySection: {
-    marginBottom: 16, // Changed from paddingTop to marginBottom
-    paddingBottom: 12, // Added padding bottom
-    borderBottomWidth: 1, // Changed from borderTop to borderBottom
+    marginBottom: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
     borderBottomColor: Colors.light.border,
   },
   todayHeader: {
@@ -229,10 +250,7 @@ const styles = StyleSheet.create({
     minWidth: 28,
     textAlign: 'right',
   },
-  // Overall Section - Updated styles for bottom position
-  overallSection: {
-    // Removed marginBottom since it's now at the bottom
-  },
+  overallSection: {},
   progressRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
