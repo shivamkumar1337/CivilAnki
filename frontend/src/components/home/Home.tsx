@@ -156,11 +156,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   sectionContainer: {
-    paddingVertical: 16,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
   },
   sectionHeader: {
-    paddingHorizontal: 16,
-    marginBottom: 12,
+    paddingHorizontal: 10,
+    // marginBottom: 12,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
