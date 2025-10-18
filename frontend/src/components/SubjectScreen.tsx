@@ -16,8 +16,6 @@ import { MainStackParamList } from '../navigation/types';
 import { Colors } from '../constants/Colors';
 import { HomeService } from '../services/HomeService';
 import { Subject, SubTopic, ProgressStats } from '../types';
-import { Card } from './ui/Card';
-import { Badge } from './ui/Badge';
 
 type SubjectScreenRouteProp = RouteProp<MainStackParamList, 'SubjectScreen'>;
 type SubjectScreenNavigationProp = StackNavigationProp<MainStackParamList, 'SubjectScreen'>;
@@ -50,7 +48,6 @@ export const SubjectScreen: React.FC = () => {
 
         setSubTopics(topicsResponse);
         
-        // Calculate stats from the response
         const questions = statsResponse.questions || [];
         const newStats = {
           new: questions.filter((q: any) => q.card_type === 'new' || !q.card_type).length,
@@ -81,7 +78,7 @@ export const SubjectScreen: React.FC = () => {
     fetchData();
   }, [subject.id]);
 
-  const handleStudyOption = (status: string, title: string) => {
+  const handleStudyOption = (status: string) => {
     navigation.navigate('QuestionScreen', {
       subject,
       questionParams: { 
@@ -93,15 +90,9 @@ export const SubjectScreen: React.FC = () => {
   };
 
   const handleTopicPress = (subTopic: SubTopic) => {
-    navigation.navigate('QuestionScreen', {
+    navigation.navigate('TopicOptions', {
       subject,
-      subTopic,
-      questionParams: {
-        status: 'due',
-        subject_id: subject.id,
-        topic_id: subTopic.id,
-        limit: 20
-      }
+      subTopic
     });
   };
 
@@ -147,79 +138,49 @@ export const SubjectScreen: React.FC = () => {
         <View style={styles.headerContent}>
           <Text style={styles.headerTitle}>{subject.name}</Text>
           <Text style={styles.headerSubtitle}>
-            {stats.total} total questions • {subTopics.length} topics
+            {stats.total} questions • {subTopics.length} topics
           </Text>
         </View>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Study Options */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Study Options</Text>
-          
-          {stats.due > 0 && (
+        {/* Quick Study Options */}
+        <View style={styles.quickStudySection}>
+          <Text style={styles.sectionTitle}>Quick Study</Text>
+          <View style={styles.quickStudyGrid}>
+            {stats.due > 0 && (
+              <TouchableOpacity 
+                style={[styles.quickStudyCard, styles.dueCard]}
+                onPress={() => handleStudyOption('due')}
+              >
+                <Text style={styles.quickStudyIcon}>⚡</Text>
+                <Text style={styles.quickStudyNumber}>{stats.due}</Text>
+                <Text style={styles.quickStudyLabel}>Due</Text>
+              </TouchableOpacity>
+            )}
+            
             <TouchableOpacity 
-              style={[styles.studyCard, styles.dueCard]}
-              onPress={() => handleStudyOption('due', 'Due for Review')}
+              style={styles.quickStudyCard}
+              onPress={() => handleStudyOption('unattempted')}
             >
-              <View style={styles.studyCardContent}>
-                <View style={styles.studyCardLeft}>
-                  <Text style={styles.studyCardIcon}>⚡</Text>
-                  <View>
-                    <Text style={styles.studyCardTitle}>Due for Review</Text>
-                    <Text style={styles.studyCardSubtitle}>
-                      {stats.due} questions ready
-                    </Text>
-                  </View>
-                </View>
-                <Badge style={styles.dueBadge}>
-                  <Text style={styles.dueBadgeText}>{stats.due}</Text>
-                </Badge>
-              </View>
-            </TouchableOpacity>
-          )}
-
-          <View style={styles.studyGrid}>
-            <TouchableOpacity 
-              style={styles.studyGridCard}
-              onPress={() => handleStudyOption('unattempted', 'Learn New')}
-            >
-              <Text style={styles.studyGridIcon}>✨</Text>
-              <Text style={styles.studyGridNumber}>{stats.new}</Text>
-              <Text style={styles.studyGridLabel}>New</Text>
+              <Text style={styles.quickStudyIcon}>✨</Text>
+              <Text style={styles.quickStudyNumber}>{stats.new}</Text>
+              <Text style={styles.quickStudyLabel}>New</Text>
             </TouchableOpacity>
 
             <TouchableOpacity 
-              style={styles.studyGridCard}
-              onPress={() => handleStudyOption('learning', 'Continue Learning')}
+              style={styles.quickStudyCard}
+              onPress={() => handleStudyOption('review')}
             >
-              <Text style={styles.studyGridIcon}>📚</Text>
-              <Text style={styles.studyGridNumber}>{stats.learning}</Text>
-              <Text style={styles.studyGridLabel}>Learning</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={styles.studyGridCard}
-              onPress={() => handleStudyOption('review', 'Review')}
-            >
-              <Text style={styles.studyGridIcon}>🔄</Text>
-              <Text style={styles.studyGridNumber}>{stats.review}</Text>
-              <Text style={styles.studyGridLabel}>Review</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={styles.studyGridCard}
-              onPress={() => handleStudyOption('today', 'Today\'s Cards')}
-            >
-              <Text style={styles.studyGridIcon}>📅</Text>
-              <Text style={styles.studyGridNumber}>{stats.today}</Text>
-              <Text style={styles.studyGridLabel}>Today</Text>
+              <Text style={styles.quickStudyIcon}>🔄</Text>
+              <Text style={styles.quickStudyNumber}>{stats.review}</Text>
+              <Text style={styles.quickStudyLabel}>Review</Text>
             </TouchableOpacity>
           </View>
         </View>
 
         {/* Topics */}
-        <View style={styles.section}>
+        <View style={styles.topicsSection}>
           <Text style={styles.sectionTitle}>Topics</Text>
           {subTopics.map((topic) => (
             <TouchableOpacity
@@ -228,15 +189,10 @@ export const SubjectScreen: React.FC = () => {
               onPress={() => handleTopicPress(topic)}
             >
               <View style={styles.topicContent}>
-                <View style={styles.topicLeft}>
-                  <Text style={styles.topicName}>{topic.name}</Text>
-                  <Text style={styles.topicMeta}>
-                    Topic {topic.id} • {subject.name}
-                  </Text>
-                </View>
+                <Text style={styles.topicName}>{topic.name}</Text>
                 <Ionicons 
                   name="chevron-forward" 
-                  size={20} 
+                  size={18} 
                   color={Colors.light.mutedForeground} 
                 />
               </View>
@@ -260,7 +216,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderBottomWidth: 1,
     borderBottomColor: Colors.light.border,
-    backgroundColor: Colors.light.card,
+    backgroundColor: Colors.light.background,
   },
   backButton: {
     marginRight: 12,
@@ -269,8 +225,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: 18,
+    fontWeight: '600',
     color: Colors.light.foreground,
   },
   headerSubtitle: {
@@ -297,93 +253,55 @@ const styles = StyleSheet.create({
     color: Colors.light.error,
     textAlign: 'center',
   },
-  section: {
+  quickStudySection: {
     padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.light.border,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
     color: Colors.light.foreground,
-    marginBottom: 16,
+    marginBottom: 12,
   },
-  studyCard: {
+  quickStudyGrid: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  quickStudyCard: {
+    flex: 1,
     backgroundColor: Colors.light.card,
     borderRadius: 12,
     padding: 16,
-    marginBottom: 16,
+    alignItems: 'center',
     borderWidth: 1,
     borderColor: Colors.light.border,
   },
   dueCard: {
-    backgroundColor: Colors.light.warning + '10',
+    backgroundColor: Colors.light.warning + '15',
     borderColor: Colors.light.warning + '30',
   },
-  studyCardContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  studyCardLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  studyCardIcon: {
-    fontSize: 24,
-    marginRight: 12,
-  },
-  studyCardTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: Colors.light.foreground,
-    marginBottom: 2,
-  },
-  studyCardSubtitle: {
-    fontSize: 14,
-    color: Colors.light.mutedForeground,
-  },
-  dueBadge: {
-    backgroundColor: Colors.light.warning,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  dueBadgeText: {
-    color: Colors.light.primaryForeground,
-    fontWeight: '600',
-  },
-  studyGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-  },
-  studyGridCard: {
-    flex: 1,
-    minWidth: '45%',
-    backgroundColor: Colors.light.card,
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Colors.light.border,
-  },
-  studyGridIcon: {
-    fontSize: 24,
+  quickStudyIcon: {
+    fontSize: 20,
     marginBottom: 8,
   },
-  studyGridNumber: {
-    fontSize: 20,
+  quickStudyNumber: {
+    fontSize: 18,
     fontWeight: '700',
     color: Colors.light.foreground,
     marginBottom: 4,
   },
-  studyGridLabel: {
+  quickStudyLabel: {
     fontSize: 12,
     color: Colors.light.mutedForeground,
     fontWeight: '500',
   },
+  topicsSection: {
+    padding: 16,
+  },
   topicCard: {
     backgroundColor: Colors.light.card,
-    borderRadius: 12,
+    borderRadius: 8,
     padding: 16,
     marginBottom: 8,
     borderWidth: 1,
@@ -394,17 +312,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  topicLeft: {
-    flex: 1,
-  },
   topicName: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '500',
     color: Colors.light.foreground,
-    marginBottom: 4,
-  },
-  topicMeta: {
-    fontSize: 14,
-    color: Colors.light.mutedForeground,
   },
 });

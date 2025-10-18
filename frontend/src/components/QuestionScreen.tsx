@@ -132,7 +132,21 @@ export const QuestionScreen: React.FC = () => {
     setUpdating(true);
     try {
       const timeSpent = Math.round((Date.now() - sessionStartTime) / 1000);
+      const isCorrect = selectedOption === currentQuestion.correctAnswer;
       
+      // Add to session data
+      setSessionData(prev => ({
+        ...prev,
+        answers: [...prev.answers, {
+          questionId: currentQuestion.question_id,
+          selectedAnswer: selectedOption || 0,
+          isCorrect,
+          timeSpent,
+          quality,
+          reviewInterval: quality < 2 ? 'review' : quality === 3 ? 'easy' : 'normal'
+        }]
+      }));
+
       await HomeService.submitAnswer({
         question_id: currentQuestion.question_id,
         quality: quality,
@@ -141,7 +155,6 @@ export const QuestionScreen: React.FC = () => {
 
       setShowQualityRating(false);
       
-      // Move to next question after a brief delay
       setTimeout(() => {
         handleNextQuestion();
       }, 500);
@@ -169,10 +182,19 @@ export const QuestionScreen: React.FC = () => {
       setShowResult(false);
       setShowQualityRating(false);
     } else {
-      // Session complete
-      navigation.goBack();
+      // Session complete - navigate to summary
+      navigation.navigate('SessionSummary', {
+        sessionData: sessionData
+      });
     }
   };
+
+  const [sessionData, setSessionData] = useState({
+    selectedSubject: subject,
+    selectedSubtopics: subTopic ? [subTopic] : [],
+    mode: 'untimed' as const,
+    answers: [] as any[],
+  });
 
   const getScreenTitle = () => {
     if (questionParams?.status === 'due') return "Due for Review";

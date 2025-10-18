@@ -34,15 +34,23 @@ export type MainStackParamList = {
     subTopic?: SubTopic;
     questionParams?: {
       status?: string;
+      question_ids?: number[];
+      limit?: number;
       subject_id?: number;
       topic_id?: number;
-      exam_id?: number;
-      year?: number;
-      limit?: number;
     };
   };
-  SessionSummary: undefined;
+  SessionSummary: {
+    sessionData: SessionData;
+  };
   Profile: undefined;
+  SubTopics: {
+    subject: Subject;
+  };
+  TopicOptions: {
+    subject: Subject;
+    subTopic: SubTopic;
+  };
 };
 
 // Add your other types here...

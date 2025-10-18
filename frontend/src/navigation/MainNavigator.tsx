@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../constants/Colors';
 import { Profile } from '../components/profile/Profile';
 import { useSafeAreaInsetsStyle } from '../utils/useSafeAreaInsetsStyle';
+import { TopicOptions } from '../components/TopicOptions';
 
 const Stack = createStackNavigator<MainStackParamList>();
 const Tab = createBottomTabNavigator<HomeTabParamList>();
@@ -93,6 +94,16 @@ const MainNavigator: React.FC = () => {
         <Stack.Screen name="Profile" component={Profile} />
         <Stack.Screen name="SubjectScreen" component={SubjectScreen} />
         <Stack.Screen name="QuestionScreen" component={QuestionScreen} />
+        <Stack.Screen 
+          name="TopicOptions" 
+          component={TopicOptions} 
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen 
+          name="SessionSummary" 
+          component={SessionSummary} 
+          options={{ headerShown: false }}
+        />
         {/* <Stack.Screen name="Practice" component={QuestionCard} /> */}
         {/* <Stack.Screen name="Summary" component={SessionSummary} /> */}
       </Stack.Navigator>

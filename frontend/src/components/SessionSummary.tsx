@@ -4,7 +4,8 @@ import {
   Text,
   StyleSheet,
   SafeAreaView,
-  ScrollView
+  ScrollView,
+  TouchableOpacity
 } from 'react-native';
 import { Button } from './ui/Button';
 import { Card } from './ui/Card';
@@ -12,18 +13,45 @@ import { Badge } from './ui/Badge';
 import { Progress } from './ui/Progress';
 import { Colors } from '../constants/Colors';
 import { SessionData } from '../types';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { MainStackParamList } from '../navigation/types';
 
-interface SessionSummaryProps {
+type SessionSummaryNavigationProp = StackNavigationProp<MainStackParamList>;
+
+type SessionSummaryProps = {
   sessionData: SessionData;
   onContinue: () => void;
   onReviewMissed: () => void;
-}
+};
 
 export const SessionSummary: React.FC<SessionSummaryProps> = ({
   sessionData,
   onContinue,
   onReviewMissed
 }) => {
+  const navigation = useNavigation<SessionSummaryNavigationProp>();
+
+  const handleContinue = () => {
+    navigation.navigate('HomeTabs');
+  };
+
+  const handleReviewMissed = () => {
+  const missedQuestions = sessionData.answers
+    .filter(answer => !answer.isCorrect)
+    .map(answer => answer.questionId);
+  
+  if (missedQuestions.length > 0) {
+    navigation.navigate('QuestionScreen', {
+      questionParams: {
+        status: 'review',
+        question_ids: missedQuestions,
+        limit: missedQuestions.length
+      }
+    });
+  }
+};
+
   const totalQuestions = sessionData.answers.length;
   const correctAnswers = sessionData.answers.filter(a => a.isCorrect).length;
   const incorrectAnswers = totalQuestions - correctAnswers;
@@ -85,6 +113,25 @@ export const SessionSummary: React.FC<SessionSummaryProps> = ({
           </Text>
         </View>
 
+        <View style={styles.actions}>
+        {incorrectAnswers > 0 && (
+          <TouchableOpacity
+            style={styles.reviewButton}
+            onPress={handleReviewMissed}
+          >
+            <Text style={styles.reviewButtonText}>
+              Review Missed Questions ({incorrectAnswers})
+            </Text>
+          </TouchableOpacity>
+        )}
+        
+        <TouchableOpacity
+          style={styles.continueButton}
+          onPress={handleContinue}
+        >
+          <Text style={styles.continueButtonText}>🏠 Return to Home</Text>
+        </TouchableOpacity>
+        </View>
         {/* Overall Performance */}
         <Card style={styles.performanceCard}>
           <View style={styles.accuracySection}>
@@ -120,7 +167,7 @@ export const SessionSummary: React.FC<SessionSummaryProps> = ({
           <Progress 
             value={accuracy} 
             height={12} 
-            style={styles.accuracyProgress}
+            // style={styles.accuracyProgress}
             progressColor={getAccuracyColor(accuracy)}
           />
         </Card>
@@ -491,5 +538,31 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     height: 44,
+  },
+  reviewButton: {
+    backgroundColor: Colors.light.secondary,
+    borderWidth: 1,
+    borderColor: Colors.light.border,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  reviewButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: Colors.light.foreground,
+  },
+  continueButton: {
+    backgroundColor: Colors.light.primary,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  continueButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: Colors.light.primaryForeground,
   },
 });
